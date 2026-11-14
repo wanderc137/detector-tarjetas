@@ -1,0 +1,117 @@
+[
+  {
+    "id": "arduino_uno_r3",
+    "name": "Arduino UNO R3",
+    "short_name": "UNO R3",
+    "mcu_soc": "ATmega328P (AVR 8 bits)",
+    "clock_mhz": 16,
+    "ram_mb": 0.002,
+    "flash_storage_gb": 3.0517578125e-05,
+    "gpio_count": 20,
+    "voltage_v": 5,
+    "connectivity": [
+      "USB-B",
+      "UART",
+      "I2C",
+      "SPI",
+      "ICSP"
+    ],
+    "dimensions_mm": [
+      68.6,
+      53.4
+    ],
+    "year": 2012,
+    "description": "La placa de referencia del ecosistema Arduino. Monta un ATmega328P a 16 MHz con 32 KB de flash y 2 KB de SRAM, 14 pines digitales (6 con PWM) y 6 entradas analógicas de 10 bits. Se alimenta por USB-B o por el conector de barril (7-12 V) y incluye un ATmega16U2 como conversor USB-serie. Es la forma más rápida de empezar con electrónica: se programa por USB y es compatible con la mayoría de shields del mercado.",
+    "image_path": null,
+    "urls": [
+      "https://docs.arduino.cc/hardware/uno-rev3"
+    ]
+  },
+  {
+    "id": "arduino_nano",
+    "name": "Arduino Nano (R3)",
+    "short_name": "Nano",
+    "mcu_soc": "ATmega328P (AVR 8 bits)",
+    "clock_mhz": 16,
+    "ram_mb": 0.002,
+    "flash_storage_gb": 3.0517578125e-05,
+    "gpio_count": 22,
+    "voltage_v": 5,
+    "connectivity": [
+      "Mini-USB",
+      "UART",
+      "I2C",
+      "SPI",
+      "ICSP"
+    ],
+    "dimensions_mm": [
+      45.0,
+      18.0
+    ],
+    "year": 2008,
+    "description": "Versión miniatura del UNO pensada para prototipos compactos y protoboards. Usa el mismo ATmega328P a 16 MHz, pero suma 8 entradas analógicas (22 pines de E/S en total) y reduce el tamaño a 45 × 18 mm. Se alimenta por Mini-USB o por el pin VIN (7-12 V) y comparte el layout de pines con el Nano clásico, por lo que acepta la mayoría de sus shields y adaptadores.",
+    "image_path": null,
+    "urls": [
+      "https://docs.arduino.cc/hardware/nano"
+    ]
+  },
+  {
+    "id": "raspberry_pi_4",
+    "name": "Raspberry Pi 4 Model B",
+    "short_name": "Pi 4",
+    "mcu_soc": "Broadcom BCM2711 (Cortex-A72, 4 núcleos)",
+    "clock_mhz": 1500,
+    "ram_mb": 2048,
+    "flash_storage_gb": 0,
+    "gpio_count": 40,
+    "voltage_v": 5,
+    "connectivity": [
+      "Wi-Fi 5",
+      "Bluetooth 5.0",
+      "Gigabit Ethernet",
+      "USB 3.0",
+      "micro-HDMI",
+      "GPIO 40 pines"
+    ],
+    "dimensions_mm": [
+      85.0,
+      56.0
+    ],
+    "year": 2019,
+    "description": "SBC de formato credit-card con SoC BCM2711 de cuatro núcleos Cortex-A72 a 1.5 GHz. Se ofrece con 1, 2, 4 u 8 GB de LPDDR4 y arranca desde microSD (o USB). Incluye Gigabit Ethernet, Wi-Fi 5, Bluetooth 5.0, dos salidas micro-HDMI 4K, dos USB 3.0 y dos USB 2.0, además del conector GPIO de 40 pines. Alimentación por USB-C de 5 V/3 A; es la plataforma habitual para proyectos de visión y servidores domésticos.",
+    "image_path": null,
+    "urls": [
+      "https://www.raspberrypi.com/products/raspberry-pi-4-model-b/"
+    ]
+  },
+  {
+    "id": "raspberry_pi_5",
+    "name": "Raspberry Pi 5",
+    "short_name": "Pi 5",
+    "mcu_soc": "Broadcom BCM2712 (Cortex-A76, 4 núcleos)",
+    "clock_mhz": 2400,
+    "ram_mb": 4096,
+    "flash_storage_gb": 0,
+    "gpio_count": 40,
+    "voltage_v": 5,
+    "connectivity": [
+      "Wi-Fi 5",
+      "Bluetooth 5.0",
+      "Gigabit Ethernet",
+      "USB 3.0",
+      "micro-HDMI",
+      "PCIe 2.0 x1",
+      "GPIO 40 pines"
+    ],
+    "dimensions_mm": [
+      85.0,
+      56.0
+    ],
+    "year": 2023,
+    "description": "Sucesora de la Pi 4 con SoC BCM2712 (cuatro Cortex-A76 a 2.4 GHz) y hasta 16 GB de LPDDR4X según variante (2, 4, 8 o 16 GB). Duplica aproximadamente el rendimiento de la generación anterior, agrega un conector PCIe 2.0 x1 (FPC), reloj en tiempo real con batería y botón de encendido. Requiere fuente USB-C de 5 V/5 A con PD para entregar los 5 A a los periféricos USB; mantiene el GPIO de 40 pines y el formato físico de la Pi 4.",
+    "image_path": null,
+    "urls": [
+      "https://www.raspberrypi.com/products/raspberry-pi-5/"
+    ]
+  }
+]

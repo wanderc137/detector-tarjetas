@@ -1,0 +1,5 @@
+# Dependencias de desarrollo (notebook x86_64).
+# En la UNO Q se usa el paquete del sistema: python3-opencv (sin pip).
+opencv-python-headless>=4.8,<6
+pytest>=7.4
+requests>=2.31

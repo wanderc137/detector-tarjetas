@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Detector de tarjetas · UNO Q</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-badge">UNO Q</span>
+      <h1>Detector de tarjetas</h1>
+    </div>
+    <div class="topbar-actions">
+      <span class="pill" id="status-pill">conectando…</span>
+      <a class="btn btn-secondary" href="/teach">🎓 Modo enseñar</a>
+    </div>
+  </header>
+
+  <div class="banner banner-warn hidden" id="banner-camera">
+    ⚠️ <strong>No se detecta la cámara.</strong>
+    <span>El stream muestra un frame de estado. Revisá el cable USB o el índice <code>CAMERA_INDEX</code>.</span>
+  </div>
+  <div class="banner banner-info hidden" id="banner-teach">
+    🧠 <strong>Todavía no hay plantillas.</strong>
+    <span>Entrená la app con el <a href="/teach">modo enseñar</a> para empezar a reconocer placas.</span>
+  </div>
+
+  <main class="layout">
+    <section class="stage">
+      <div class="video-wrap" id="videoWrap">
+        <img id="stream" src="/stream.mjpg" alt="Stream en vivo de la cámara" autoplay>
+        <canvas id="overlay" aria-label="Detecciones superpuestas"></canvas>
+        <div class="stream-placeholder" id="streamPlaceholder">Esperando video…</div>
+      </div>
+      <p class="hint">
+        Hacé clic sobre una placa o su globo para abrir la ficha técnica completa.
+        <span class="hint-meta" id="hint-meta"></span>
+      </p>
+    </section>
+
+    <aside class="panel hidden" id="panel" aria-live="polite">
+      <button class="panel-close" id="panelClose" type="button" aria-label="Cerrar ficha">×</button>
+      <div id="panelContent"></div>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    <span>ORB + RANSAC · sin modelos externos · 100 % local</span>
+    <span id="footer-stats"></span>
+  </footer>
+</body>
+</html>

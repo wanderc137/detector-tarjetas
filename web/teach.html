@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modo enseñar · Detector de tarjetas</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/teach.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-badge">UNO Q</span>
+      <h1>Modo enseñar</h1>
+    </div>
+    <div class="topbar-actions">
+      <span class="pill" id="status-pill">conectando…</span>
+      <a class="btn btn-secondary" href="/">← Volver al detector</a>
+    </div>
+  </header>
+
+  <main class="teach-layout">
+    <section class="teach-preview">
+      <div class="video-wrap">
+        <img id="stream" src="/stream.mjpg" alt="Vista previa de la cámara">
+      </div>
+      <p class="hint">Apuntá la cámara a la placa y capturá entre 3 y 5 muestras por etiqueta, desde ángulos y distancias distintas.</p>
+    </section>
+
+    <section class="teach-controls">
+      <div class="card">
+        <h2>1. Elegí la etiqueta</h2>
+        <label class="field">
+          <span>Placa a enseñar</span>
+          <select id="label-select">
+            <option value="arduino_uno_r3">Arduino UNO R3</option>
+            <option value="arduino_nano">Arduino Nano</option>
+            <option value="raspberry_pi_4">Raspberry Pi 4</option>
+            <option value="raspberry_pi_5">Raspberry Pi 5</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="card">
+        <h2>2. Capturá muestras</h2>
+        <div class="button-row">
+          <button class="btn" id="capture-btn" type="button">📸 Capturar muestra</button>
+          <button class="btn btn-secondary" id="reload-btn" type="button">🔄 Entrenar / recargar</button>
+        </div>
+        <p class="feedback" id="feedback" role="status"></p>
+      </div>
+
+      <div class="card">
+        <h2>3. Muestras guardadas</h2>
+        <ul class="counts" id="counts"></ul>
+        <div class="button-row">
+          <button class="btn btn-danger" id="reset-btn" type="button">🗑️ Borrar muestras de esta etiqueta</button>
+          <button class="btn btn-danger" id="reset-all-btn" type="button">Borrar todas</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>Las muestras se guardan en <code>data/templates/&lt;etiqueta&gt;/*.npz</code></span>
+    <span id="footer-stats"></span>
+  </footer>
+</body>
+</html>
