@@ -1164,6 +1164,57 @@ detector-tarjetas/
 
 ---
 
+## Ficha de evaluación
+
+**Madurez global: 3.8/5**
+
+| Criterio | Nota | Evidencia |
+|---|---:|---|
+| Madurez | 4/5 | Servicio systemd activo en 192.168.1.5:8000, 41 tests heredados, cámara a unos 30 fps y detección en vivo con score 0,90–0,94. Solo raspberry_pi_2 tiene 24 muestras. |
+| Reproducibilidad | 3/5 | El runbook depende de una IP fija, rutas /home/jma, clave SSH y contraseña sudo no publicada. Los scripts y el estado as-built están documentados, pero repetir el montaje exige ajustar esos valores. |
+| Documentación | 4/5 | ESTADO_ACTUAL y DESPLIEGUE_UNOQ describen desviaciones del diseño, umbrales, plantillas, pipeline de despliegue y pendientes. El README conserva partes del diseño original que ya no coinciden. |
+| Honestidad de límites | 5/5 | Declara que las muestras incluyen la mesa y provocan falsos positivos, que el globo necesitó suavizado y que el despliegue por USB exigió un jumper de modo host. |
+| Valor demostrativo | 4/5 | Muestra iteración de campo real: de webcam USB inestable a cámara IP, de 0,35 a 0,60 de score y de 15 a 20 inliers, con detección estable sobre una placa física. |
+| Facilidad de despliegue | 3/5 | El despliegue funciona por scp y SSH, pero el montaje incluye hub USB-C, jumper JCTL, rutas con sudo y una cámara cuya IP cambia. No es un procedimiento de un solo comando. |
+
+Sirve para ver cómo un detector académico se ajusta hasta quedar operativo en una placa real, con cámara IP, umbrales más estrictos y una interfaz menos ruidosa. La limitación que más pesa es que la única etiqueta entrenada arrastra el fondo de la mesa y aún produce falsos positivos según el ángulo.
+
+## Lo que no funcionó
+
+### v1.0.0-campo · cámara — La webcam USB desestabilizaba la placa
+
+La webcam por el hub USB-C dejaba la UNO Q inestable por alimentación justa y provocaba caídas de WiFi. Se pasó a un teléfono con IP Webcam y se agregó CAMERA_URL editable desde la página, persistida en data/camera_url.txt porque la IP del teléfono cambia por DHCP.
+
+### v1.0.0-campo · plantillas — Las plantillas sembradas generaban falsos positivos
+
+Las 20 plantillas generadas desde imágenes de Wikimedia hacían que el fondo se detectara como placa. Se borraron, se capturaron 24 muestras reales de Raspberry Pi 2 y se subieron SCORE_THRESHOLD a 0,60 y MIN_INLIERS a 20.
+
+### v1.0.0-campo · interfaz — Globo cómic con jitter
+
+Con la tarjeta quieta, ORB+RANSAC movía el globo cuadro a cuadro. Se aplicó mediana sobre nueve cuadros, EMA de 0,15, deadband de 18 px, histéresis de 20 px y gracia de 1500 ms; además se quitó el recuadro.
+
+### v1.0.0-campo · detección — Falso positivo residual por fondo
+
+Las 24 muestras incluyen la mesa, así que el falso positivo depende del ángulo y del fondo. Se documentó como pendiente recapturar con fondo limpio o usar train_from_stream.py; no se ocultó el resultado.
+
+## Preguntas típicas
+
+**¿Qué es Detector de tarjetas · versión de campo?**
+
+Es la versión desplegada y ajustada del detector ORB+RANSAC: corre en la UNO Q, toma video de un teléfono con IP Webcam y muestra un globo con la ficha de la placa reconocida. Incluye nueve fichas y scripts de entrenamiento desde stream.
+
+**¿Qué no hace?**
+
+No hace OCR ni reconoce componentes genéricos, y en este estado solo tiene entrenada Raspberry Pi 2. Tampoco elimina los falsos positivos por fondo, no admite varias instancias por plantilla y no tiene autenticación ni TLS.
+
+**¿Cómo se ejecuta o despliega?**
+
+Se edita en el notebook, se copia por scp al puerto 2222 y se instala con sudo en /home/jma/detector-tarjetas; luego se reinicia detector-tarjetas.service. La cámara se cambia desde la barra de la página, sin SSH.
+
+**¿Qué se puede reutilizar?**
+
+El flujo de cámara IP editable y persistida, el suavizado de cajas por mediana y EMA, y los scripts seed_templates.py, train_from_stream.py y diag_match.py. También el esquema de umbrales más estrictos para reducir falsos positivos.
+
 ## Licencia y uso
 
 Publicado bajo la **Licencia MIT** (archivo `LICENSE`, © 2026 wanderc137):
