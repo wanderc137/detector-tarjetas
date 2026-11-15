@@ -1,0 +1,2156 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Detector de Tarjetas — Arduino UNO Q</title>
+<meta content="Una aplicación web que reconoce placas electrónicas en el video de una webcam USB y dibuja recuadros con globos de cómic sobre cada una: Arduino UNO R3, Nano, Raspberry Pi 4 y Raspberry Pi 5. Toda la captura y la inferencia ocurren en la placa, sin nube." name="description"/>
+<meta content="wanderc137" name="author"/>
+<meta content="website" property="og:type"/>
+<meta content="Detector de Tarjetas — Arduino UNO Q" property="og:title"/>
+<meta content="Una aplicación web que reconoce placas electrónicas en el video de una webcam USB y dibuja recuadros con globos de cómic sobre cada una: Arduino UNO R3, Nano, Raspberry Pi 4 y Raspberry Pi 5. Toda la captura y la inferencia ocurren en la placa, sin nube." property="og:description"/>
+<meta content="https://wanderc137.github.io/detector-tarjetas/" property="og:url"/>
+<meta content="https://wanderc137.github.io/detector-tarjetas/assets/og.png" property="og:image"/>
+<meta content="summary_large_image" name="twitter:card"/>
+<meta content="Detector de Tarjetas — Arduino UNO Q" name="twitter:title"/>
+<meta content="Una aplicación web que reconoce placas electrónicas en el video de una webcam USB y dibuja recuadros con globos de cómic sobre cada una: Arduino UNO R3, Nano, Raspberry Pi 4 y Raspberry Pi 5. Toda la captura y la inferencia ocurren en la placa, sin nube." name="twitter:description"/>
+<meta content="https://wanderc137.github.io/detector-tarjetas/assets/og.png" name="twitter:image"/>
+<link href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;rect width='100' height='100' rx='22' fill='%2305070c'/&gt;&lt;rect x='22' y='22' width='56' height='56' rx='12' fill='none' stroke='%2322C55E' stroke-width='7'/&gt;&lt;circle cx='50' cy='50' r='9' fill='%2322C55E'/&gt;&lt;/svg&gt;" rel="icon"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scrollbar-width:none}
+::-webkit-scrollbar{width:0;height:0}
+::-webkit-scrollbar-track{background:#05070c}
+::-webkit-scrollbar-thumb{background:#2a3448;border-radius:999px;border:2px solid #05070c}
+::-webkit-scrollbar-thumb:hover{background:#3a4a66}
+body{
+  margin:0;background:#05070c;color:#e8edf6;
+  font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+::selection{background:var(--accent);color:#04110c}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+h1,h2,h3,h4{font-family:'Space Grotesk','Inter',sans-serif;line-height:1.05;letter-spacing:-.03em;margin:0}
+p{margin:0}
+.mono{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace}
+.wrap{width:min(1180px,calc(100% - 48px));margin:0 auto}
+.grid-overlay{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+  background-size:64px 64px;
+  mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,#000 30%,transparent 78%);
+  -webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,#000 30%,transparent 78%);
+}
+.glow{
+  position:fixed;z-index:0;pointer-events:none;filter:blur(90px);opacity:.20;
+  width:720px;height:720px;border-radius:50%;
+}
+.glow.one{top:-340px;right:-180px;background:var(--accent)}
+.glow.two{top:380px;left:-380px;background:var(--accent2);opacity:.14}
+.nav{
+  position:sticky;top:0;z-index:50;
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  background:rgba(5,7,12,.72);border-bottom:1px solid rgba(255,255,255,.07);
+}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:72px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:-.02em}
+.brand-mark{
+  width:38px;height:38px;border-radius:11px;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#05100c;
+  box-shadow:0 0 30px color-mix(in srgb,var(--accent) 35%,transparent);
+}
+.brand-mark svg{width:22px;height:22px;stroke:#05100c;fill:none;stroke-width:1.8}
+.brand small{display:block;font-size:10px;letter-spacing:.18em;color:#8b9ab0;font-weight:600;text-transform:uppercase}
+.nav-links{display:flex;align-items:center;gap:26px;font-size:14px;color:#a9b6c8}
+.nav-links a:hover{color:#fff}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  padding:13px 22px;border-radius:12px;font-weight:650;font-size:14.5px;
+  border:1px solid transparent;transition:transform .2s ease,box-shadow .2s ease,background .2s ease;
+  white-space:nowrap;
+}
+.btn:hover{transform:translateY(-2px)}
+.btn-primary{
+  background:linear-gradient(100deg,var(--accent),var(--accent2));color:#04110c;
+  box-shadow:0 12px 34px -12px color-mix(in srgb,var(--accent) 70%,transparent);
+}
+.btn-primary:hover{box-shadow:0 18px 44px -12px color-mix(in srgb,var(--accent) 80%,transparent)}
+.btn-ghost{background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.14);color:#e8edf6}
+.btn-ghost:hover{background:rgba(255,255,255,.07)}
+.btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2}
+.hero{position:relative;z-index:1;padding:96px 0 72px}
+.hero-grid{display:grid;grid-template-columns:1.04fr .96fr;gap:64px;align-items:center}
+.eyebrow{
+  font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:12px;margin-bottom:22px;
+}
+.eyebrow::before{content:"";width:34px;height:1px;background:var(--accent);opacity:.7}
+h1{font-size:clamp(42px,6.4vw,80px);font-weight:700;letter-spacing:-.045em}
+.grad{background:linear-gradient(100deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:clamp(17px,1.5vw,19px);color:#aab7c9;margin-top:24px;max-width:60ch}
+.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
+.hero-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}
+.badge{
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.04em;
+  padding:6px 11px;border-radius:999px;border:1px solid rgba(255,255,255,.12);
+  color:#9fb0c4;background:rgba(255,255,255,.025);
+}
+.hero-visual{position:relative}
+.visual-frame{
+  border:1px solid rgba(255,255,255,.11);border-radius:20px;overflow:hidden;
+  background:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.012));
+  box-shadow:0 40px 90px -40px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.02) inset;
+  padding:14px;
+}
+.visual-frame img{border-radius:12px;width:100%}
+.visual-caption{font-size:11.5px;color:#7f8ea3;margin-top:12px;text-align:right;font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
+.float-chip{
+  position:absolute;left:-22px;bottom:34px;display:flex;align-items:center;gap:10px;
+  background:rgba(9,13,21,.92);border:1px solid rgba(255,255,255,.14);border-radius:13px;
+  padding:11px 15px;font-size:12.5px;color:#c7d3e2;backdrop-filter:blur(10px);
+  box-shadow:0 20px 50px -20px #000;
+}
+.float-chip b{color:var(--accent);font-family:'Space Grotesk',sans-serif;font-size:16px}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent);animation:pulse 2.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.stats{position:relative;z-index:1;border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.018)}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.stat{padding:34px 26px;border-left:1px solid rgba(255,255,255,.06)}
+.stat:first-child{border-left:0;padding-left:0}
+.stat-value{font-family:'Space Grotesk',sans-serif;font-size:clamp(28px,3.4vw,42px);font-weight:700;letter-spacing:-.04em;background:linear-gradient(100deg,#fff,#a9b8cc);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat-label{font-size:12px;color:#7f8ea3;letter-spacing:.04em;margin-top:3px}
+.section{position:relative;z-index:1;padding:96px 0}
+.section.tight{padding-top:56px}
+.section-head{max-width:780px;margin-bottom:44px}
+.kicker{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+h2{font-size:clamp(30px,4.1vw,50px);font-weight:700}
+.section-sub{color:#97a6ba;font-size:17px;margin-top:16px;max-width:68ch}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.card{
+  border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:28px;
+  background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+}
+.card .icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--accent) 12%,transparent);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);margin-bottom:18px}
+.card .icon svg{width:21px;height:21px;stroke:var(--accent);fill:none;stroke-width:1.8}
+.card h3{font-size:20px;margin-bottom:9px}
+.card p{color:#9dabbf;font-size:14.5px}
+.timeline{position:relative;margin-top:10px}
+.timeline::before{content:"";position:absolute;left:23px;top:12px;bottom:12px;width:1px;background:linear-gradient(var(--accent),rgba(255,255,255,.08))}
+.step{display:grid;grid-template-columns:48px 1fr;gap:22px;padding:19px 0;align-items:start}
+.step-num{
+  width:47px;height:47px;border-radius:50%;display:grid;place-items:center;
+  border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);
+  background:#080c14;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;
+  position:relative;z-index:1;box-shadow:0 0 26px -6px color-mix(in srgb,var(--accent) 45%,transparent);
+}
+.step-body h3{font-size:18px;margin-bottom:5px}
+.step-body p{color:#93a2b7;font-size:14.5px;max-width:78ch}
+.figure{
+  border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:16px;
+  background:linear-gradient(160deg,rgba(255,255,255,.04),rgba(255,255,255,.008));
+}
+.figure img{width:100%;border-radius:12px}
+.figure figcaption{font-size:12px;color:#7f8ea3;margin-top:12px;font-family:'JetBrains Mono',monospace}
+.arch-points{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+.arch-points .card{padding:20px}
+.arch-points .card h4{font-size:14.5px;margin-bottom:5px}
+.arch-points .card p{font-size:13px}
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.feature{border:1px solid rgba(255,255,255,.085);border-radius:16px;padding:23px;background:rgba(255,255,255,.022);transition:border-color .2s,background .2s,transform .2s}
+.feature:hover{border-color:color-mix(in srgb,var(--accent) 38%,transparent);background:rgba(255,255,255,.038);transform:translateY(-3px)}
+.feature .icon{width:37px;height:37px;border-radius:10px;display:grid;place-items:center;background:color-mix(in srgb,var(--accent) 10%,transparent);margin-bottom:15px}
+.feature .icon svg{width:19px;height:19px;stroke:var(--accent);fill:none;stroke-width:1.8}
+.feature h3{font-size:15.5px;margin-bottom:6px}
+.feature p{font-size:13.2px;color:#94a3b8;line-height:1.55}
+.stack-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:22px;align-items:start}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip{font-family:'JetBrains Mono',monospace;font-size:11.5px;padding:7px 12px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:#aab8ca}
+.terminal{border:1px solid rgba(255,255,255,.13);border-radius:16px;overflow:hidden;background:#070a10;box-shadow:0 30px 70px -35px #000}
+.terminal-bar{display:flex;align-items:center;gap:7px;padding:12px 15px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025)}
+.terminal-bar i{width:10px;height:10px;border-radius:50%;background:#ff5f57;display:block}
+.terminal-bar i:nth-child(2){background:#febc2e}
+.terminal-bar i:nth-child(3){background:#28c840}
+.terminal-bar span{margin-left:8px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#718197;letter-spacing:.08em}
+.terminal pre{margin:0;padding:20px;overflow:auto;font-family:'JetBrains Mono',monospace;font-size:12.2px;line-height:1.8;color:#c6d2e0}
+.terminal .p{color:var(--accent)}
+.terminal .c{color:#68788d}
+.note{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:12.5px;color:#8d9cb0;line-height:1.55}
+.note svg{width:16px;height:16px;stroke:var(--accent);fill:none;stroke-width:1.8;flex:0 0 auto;margin-top:2px}
+.docs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.doc-card{display:block;border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:24px;background:rgba(255,255,255,.022);transition:border-color .2s,transform .2s,background .2s}
+.doc-card:hover{border-color:color-mix(in srgb,var(--accent) 40%,transparent);transform:translateY(-3px);background:rgba(255,255,255,.04)}
+.doc-card .tag{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.15em;color:var(--accent);text-transform:uppercase}
+.doc-card h3{font-size:17px;margin:10px 0 6px}
+.doc-card p{font-size:13px;color:#93a2b7}
+.doc-card .arrow{display:flex;align-items:center;gap:6px;margin-top:16px;font-size:12.5px;color:#c2cfdf}
+.doc-card .arrow svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;transition:transform .2s}
+.doc-card:hover .arrow svg{transform:translateX(4px)}
+.gallery{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.gallery .figure{margin:0}
+.cta{position:relative;z-index:1;padding:40px 0 96px}
+.cta-card{
+  border-radius:24px;padding:52px;text-align:center;position:relative;overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);
+  background:
+    radial-gradient(700px 300px at 50% 0%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 70%),
+    linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.012));
+}
+.cta-card h2{font-size:clamp(28px,3.7vw,42px)}
+.cta-card p{color:#9dabbf;max-width:62ch;margin:16px auto 0}
+.cta-card .hero-actions{justify-content:center}
+footer{position:relative;z-index:1;border-top:1px solid rgba(255,255,255,.08);padding:52px 0 36px;background:rgba(4,6,10,.6)}
+.foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px}
+.foot-brand{display:flex;align-items:center;gap:11px;font-weight:700;margin-bottom:12px}
+.foot-brand .brand-mark{width:32px;height:32px;border-radius:9px}
+.foot-p{font-size:13px;color:#8493a7;max-width:38ch}
+.foot h4{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#718197;margin-bottom:13px;font-weight:500}
+.foot-links{display:flex;flex-direction:column;gap:8px;font-size:13px;color:#9aa9bc}
+.foot-links a:hover{color:#fff}
+.foot-bottom{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.07);margin-top:38px;padding-top:22px;font-size:11.5px;color:#6f7f93;font-family:'JetBrains Mono',monospace}
+.reveal{opacity:1;transform:none;transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.live-dot{animation:none}html{scroll-behavior:auto}}
+@media (max-width:980px){
+  .hero-grid,.split,.stack-grid,.gallery{grid-template-columns:1fr}
+  .hero{padding-top:64px}
+  .hero-visual{order:-1}
+  .features{grid-template-columns:1fr 1fr}
+  .arch-points{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .stat:nth-child(3){border-left:0;padding-left:0}
+  .stat{border-top:1px solid rgba(255,255,255,.06)}
+  .stat:nth-child(-n+2){border-top:0}
+  .docs-grid{grid-template-columns:1fr}
+  .foot-grid{grid-template-columns:1fr 1fr}
+  .nav-links{display:none}
+}
+@media (max-width:620px){
+  .wrap{width:calc(100% - 32px)}
+  .features{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .stat{padding:24px 16px}
+  .cta-card{padding:34px 22px}
+  .float-chip{left:8px;bottom:16px}
+  .foot-grid{grid-template-columns:1fr}
+  .section{padding:72px 0}
+}
+
+.fail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:6px}
+.fail{background:rgba(10,18,24,.55);border:1px solid var(--line);border-radius:14px;padding:18px}
+.fail .v{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.fail h3{font-size:16px;margin:8px 0 6px}
+.fail p{font-size:14px;margin:0;color:var(--muted)}
+.rating-head{display:flex;align-items:center;gap:20px;margin:6px 0 18px;padding:18px 20px;border:1px solid var(--line);border-radius:16px;background:rgba(10,18,24,.5)}
+.rating-avg{font-family:var(--mono);font-size:40px;line-height:1;color:var(--accent)}
+.rating-avg small{font-size:14px;color:var(--muted)}
+.rating-head p{margin:4px 0 0;font-size:14px;color:var(--muted);max-width:70ch}
+.rating{display:grid;gap:2px}
+.rating-row{display:grid;grid-template-columns:165px minmax(90px,1fr) 48px;gap:14px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}
+.rating-row:last-child{border-bottom:0}
+.rating-name{font-size:13.5px;color:var(--text)}
+.rating-bar{height:6px;border-radius:99px;background:rgba(148,190,200,.14);overflow:hidden}
+.rating-bar span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.rating-score{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right}
+.rating-note{grid-column:1/-1;font-size:12.5px;color:var(--muted);margin:-4px 0 8px}
+.faq{display:grid;gap:10px;margin-top:4px}
+.faq details{border:1px solid var(--line);border-radius:14px;padding:14px 18px;background:rgba(10,18,24,.4)}
+.faq summary{cursor:pointer;font-weight:600;font-size:14.5px;list-style:none}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";float:right;color:var(--accent);font-family:var(--mono)}
+.faq details[open] summary::after{content:"−"}
+.faq p{margin:10px 0 0;font-size:14px;color:var(--muted);line-height:1.7}
+.concept-grid{display:grid;grid-template-columns:1.35fr .65fr;gap:26px;align-items:start}
+.concept-grid p{font-size:15.5px;color:var(--muted);line-height:1.8;margin:0 0 14px}
+.concept-side{border-left:1px solid var(--line);padding-left:22px}
+.concept-side .k{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.concept-side p{font-size:13px;margin:6px 0 16px}
+@media(max-width:760px){.concept-grid,.fail-grid{grid-template-columns:1fr}.concept-side{border-left:0;padding-left:0}}
+
+</style>
+</head>
+<body style="--accent:#22C55E;--accent2:#F59E0B">
+<div class="grid-overlay"></div>
+<div class="glow one"></div>
+<div class="glow two"></div>
+<header class="nav">
+<div class="wrap nav-inner">
+<a class="brand" href="#top">
+<span class="brand-mark"><svg viewbox="0 0 24 24"><rect height="14" rx="3" width="14" x="5" y="5"></rect><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"></path><circle cx="12" cy="12" r="2.5"></circle></svg></span>
+<span>Pasillo Seguro<small>Portfolio · Arduino UNO Q</small></span>
+</a>
+<nav aria-label="Navegación" class="nav-links">
+<a href="#problema">Visión</a>
+<a href="#como">Cómo funciona</a>
+<a href="#arquitectura">Arquitectura</a>
+<a href="#docs">Documentación</a>
+<a class="btn btn-ghost" href="https://github.com/wanderc137/detector-tarjetas" rel="noopener" style="padding:9px 15px" target="_blank">GitHub</a>
+</nav>
+</div>
+</header>
+<main id="top">
+<section class="hero"><div class="wrap hero-grid"><div class="hero-copy"><div class="eyebrow">Arduino UNO Q · OpenCV · ORB</div><h1>Detector de <span class="grad">Tarjetas</span></h1><p class="lead">Una aplicación web que reconoce placas electrónicas en el video de una webcam USB y dibuja recuadros con globos de cómic sobre cada una: Arduino UNO R3, Nano, Raspberry Pi 4 y Raspberry Pi 5. Toda la captura y la inferencia ocurren en la placa, sin nube.</p><div class="hero-actions"><a class="btn btn-primary" href="https://github.com/wanderc137/detector-tarjetas" rel="noopener" target="_blank">Ver el repositorio</a><a class="btn btn-ghost" href="#concepto">Cómo funciona</a></div><div class="badges"><span class="badge">ORB + homografía</span><span class="badge">Webcam USB</span><span class="badge">15 fps</span><span class="badge">0 GPU</span></div></div>
+<div class="hero-visual"><div class="visual-frame" style="padding:18px">
+<svg aria-label="Teléfono, UNO Q y alerta por color" role="img" style="width:100%;height:auto;display:block" viewbox="0 0 520 320">
+<defs><lineargradient id="pg" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0" stop-color="#00D8C0"></stop><stop offset="1" stop-color="#2E7DFF"></stop>
+</lineargradient></defs>
+<rect fill="none" height="190" rx="14" stroke="#00D8C0" stroke-width="2" width="120" x="18" y="70"></rect>
+<rect fill="rgba(0,216,192,.10)" height="132" rx="6" stroke="#2E7DFF" width="84" x="36" y="92"></rect>
+<circle cx="78" cy="244" fill="#00D8C0" r="5"></circle>
+<text fill="#9db4bd" font-family="monospace" font-size="11" text-anchor="middle" x="78" y="58">IP Webcam</text>
+<path d="M150 165h74" stroke="url(#pg)" stroke-dasharray="6 4" stroke-width="2"></path>
+<path d="M218 159l10 6-10 6" fill="#2E7DFF"></path>
+<rect fill="rgba(0,216,192,.08)" height="94" rx="12" stroke="#00D8C0" stroke-width="2" width="150" x="236" y="118"></rect>
+<text fill="#e6f0f3" font-family="monospace" font-size="12" text-anchor="middle" x="311" y="158">UNO Q</text>
+<text fill="#9db4bd" font-family="monospace" font-size="10" text-anchor="middle" x="311" y="178">decode · riesgo</text>
+<path d="M398 165h56" stroke="url(#pg)" stroke-dasharray="6 4" stroke-width="2"></path>
+<path d="M448 159l10 6-10 6" fill="#2E7DFF"></path>
+<rect fill="none" height="138" rx="10" stroke="#14F195" stroke-width="4" width="42" x="462" y="96"></rect>
+<text fill="#14F195" font-family="monospace" font-size="10" text-anchor="middle" x="483" y="86">verde</text>
+</svg></div>
+<div class="visual-caption">Del stream MJPEG al riesgo de choque, en la placa.</div></div>
+</div></section>
+
+
+
+
+
+
+
+
+<div class="rich-block"><section class="section" id="concepto"><div class="wrap"><div class="section-head"><div class="kicker">El concepto</div><h2>Qué es y por qué existe</h2><p class="section-sub">El problema, el enfoque y el alcance real del proyecto.</p></div><div class="concept-grid"><div><p>Detector de tarjetas es una aplicación web local que reconoce placas electrónicas en el video de una webcam USB. Usa OpenCV ORB, BFMatcher con ratio test y homografía RANSAC para comparar el cuadro contra plantillas que el usuario enseña desde /teach; al detectar, dibuja un globo cómic con MCU, RAM y reloj. Trae fichas de Arduino UNO R3, Nano, Raspberry Pi 4 y Pi 5.</p><p>La versión 1.0.0 demuestra que se puede hacer detección multinstancia sin redes neuronales, sin GPU y sin internet, con 41 tests y una inferencia objetivo de 200–300 ms en ARM64. No es un clasificador genérico ni hace OCR: solo reconoce lo enseñado y depende de la calidad de las muestras. En esta etapa el despliegue físico en la UNO Q quedó pendiente porque la placa no era accesible por red ni por ADB.</p></div><div class="concept-side"><div class="k">Cómo leer esta ficha</div><p>Los tropiezos salen de la bitácora y de las versiones tempranas. La evaluación usa seis criterios fijos, de 1 a 5, y no premia la espectacularidad: premia que el proyecto se pueda reproducir y entender.</p></div></div></div></section><section class="section tight"><div class="wrap"><div class="section-head"><div class="kicker">El proyecto en detalle</div><h2>Documentación preservada</h2><p class="section-sub">El README original, completo y en su contexto.</p></div><div class="detail rich">
+<p><strong>Visión artificial en tiempo real, 100 % local, sin modelos externos.</strong></p>
+<p>Aplicación web auto-contenida que <strong>reconoce placas electrónicas</strong> (Arduino UNO R3,
+Arduino Nano, Raspberry Pi 4 y Raspberry Pi 5) en el video de una webcam USB y
+dibuja <strong>recuadros verdes con globos cómic</strong> que muestran la información técnica
+de cada placa sobre la imagen en vivo.</p>
+<p>Corre en el <strong>lado Linux de una Arduino UNO Q</strong> (Debian ARM64) y también en un
+<strong>notebook x86_64</strong> para desarrollo. El navegador solo abre la página: toda la
+captura, la inferencia y el servidor viven en la placa.</p>
+<blockquote>
+<p><strong>Versión:</strong> 1.0.0 · <strong>Estado:</strong> código auditado y aprobado · <strong>Tests:</strong> 41/41
+pasando en el notebook · <strong>Despliegue en UNO Q:</strong> pendiente (ver
+<a href="#estado-actual-verificado">Estado actual verificado</a>).</p>
+</blockquote>
+<hr/>
+<h2 id="tabla-de-contenidos">Tabla de contenidos</h2>
+<ol>
+<li><a href="#qué-es">Qué es</a></li>
+<li><a href="#características">Características</a></li>
+<li><a href="#principio-de-funcionamiento">Principio de funcionamiento</a></li>
+<li><a href="#hardware-y-conexión">Hardware y conexión</a></li>
+<li><a href="#requisitos">Requisitos</a></li>
+<li><a href="#puesta-en-marcha-local-notebook">Puesta en marcha local (notebook)</a></li>
+<li><a href="#despliegue-en-la-arduino-uno-q">Despliegue en la Arduino UNO Q</a></li>
+<li><a href="#modo-enseñar-paso-a-paso">Modo enseñar paso a paso</a></li>
+<li><a href="#uso-diario">Uso diario</a></li>
+<li><a href="#fichas-técnicas-incluidas">Fichas técnicas incluidas</a></li>
+<li><a href="#api-http">API HTTP</a></li>
+<li><a href="#rendimiento-y-ajustes">Rendimiento y ajustes</a></li>
+<li><a href="#resolución-de-problemas">Resolución de problemas</a></li>
+<li><a href="#seguridad-y-advertencias">Seguridad y advertencias</a></li>
+<li><a href="#estado-actual-verificado">Estado actual verificado</a></li>
+<li><a href="#estructura-del-repositorio">Estructura del repositorio</a></li>
+<li><a href="#licencia-y-uso">Licencia y uso</a></li>
+</ol>
+<hr/>
+<h2 id="que-es">Qué es</h2>
+<p><code>detector-tarjetas</code> es una aplicación de <strong>detección de objetos por plantillas
+visuales</strong>. No usa redes neuronales, no descarga pesos, no consulta servicios en
+la nube y no necesita GPU. La detección se resuelve con <strong>OpenCV ORB +
+homografía RANSAC</strong> y un conjunto de plantillas que el propio usuario enseña
+desde el navegador apuntando la cámara a cada placa.</p>
+<p>El resultado se presenta como una <strong>escena de cómic</strong>: cada placa detectada
+recibe un recuadro verde con esquinas estilo visor y un globo de diálogo blanco
+con borde negro que resume tres datos (MCU, RAM y reloj). Al hacer clic sobre la
+placa o el globo se abre un panel lateral con la ficha técnica completa.</p>
+<table>
+<thead>
+<tr>
+<th>Aspecto</th>
+<th>Detalle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tipo</td>
+<td>Aplicación web de visión en tiempo real</td>
+</tr>
+<tr>
+<td>Detección</td>
+<td>ORB + BFMatcher (Hamming) + ratio test + homografía RANSAC</td>
+</tr>
+<tr>
+<td>Placas de fábrica</td>
+<td>Arduino UNO R3, Arduino Nano (R3), Raspberry Pi 4, Raspberry Pi 5</td>
+</tr>
+<tr>
+<td>Entrada</td>
+<td>Webcam USB UVC (<code>/dev/video0</code>, 640×480, MJPG)</td>
+</tr>
+<tr>
+<td>Salida</td>
+<td>Stream MJPEG + API JSON + canvas con recuadros y globos</td>
+</tr>
+<tr>
+<td>Hardware destino</td>
+<td>Arduino UNO Q, lado Linux Debian ARM64</td>
+</tr>
+<tr>
+<td>Alternativa</td>
+<td>Notebook Linux x86_64 con webcam</td>
+</tr>
+<tr>
+<td>Dependencias externas</td>
+<td>Ninguna en runtime (solo OpenCV del sistema)</td>
+</tr>
+<tr>
+<td>Autenticación</td>
+<td>No (pensada para LAN de confianza)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="lo-que-no-es">Lo que <strong>no</strong> es</h3>
+<ul>
+<li>No es un clasificador genérico de componentes electrónicos: reconoce <strong>solo las
+  etiquetas que fueron enseñadas</strong>.</li>
+<li>No identifica marcas, números de serie ni texto (no hace OCR).</li>
+<li>No es un servicio de internet: no hay TLS, usuarios ni cuentas.</li>
+<li>No funciona "de fábrica" sin entrenar: las fichas técnicas vienen cargadas,
+  pero <strong>las plantillas ORB se generan al enseñar cada placa</strong>.</li>
+</ul>
+<hr/>
+<h2 id="caracteristicas">Características</h2>
+<ul>
+<li>🎥 <strong>Stream MJPEG</strong> en vivo a 640×480, calidad JPEG 85, hasta 15 fps.</li>
+<li>🧠 <strong>Detección multinstancia</strong>: varias placas distintas y varias copias del
+  mismo modelo en el mismo cuadro, separadas por clustering espacial.</li>
+<li>💬 <strong>Globos cómic</strong> dibujados en <code>&lt;canvas&gt;</code>: nombre corto + MCU + RAM + reloj,
+  con colita que apunta a la placa y evitación de solapamientos.</li>
+<li>🖱️ <strong>Ficha completa al clic</strong>: panel lateral con MCU/SoC, reloj, RAM,
+  almacenamiento, GPIO, voltaje, dimensiones, conectividad, año, descripción y
+  enlace a la documentación oficial.</li>
+<li>🎓 <strong>Modo enseñar</strong> (<code>/teach</code>): captura de muestras por etiqueta, recarga en
+  caliente, borrado por etiqueta o total, todo desde el navegador.</li>
+<li>🛟 <strong>Tolerancia a fallos</strong>: sin cámara se muestra un frame de estado y la API
+  reporta <code>camera.present=false</code>; reconexión automática cada 2 s; sin plantillas
+  la UI invita a entrenar; cámara ausente, plantillas corruptas y cuerpos JSON
+  inválidos se manejan sin tumbar el servidor.</li>
+<li>🧩 <strong>Sin dependencias de frontend</strong>: HTML, CSS y JavaScript puros, sin CDNs,
+  sin frameworks, sin fuentes externas. Tipografías del sistema.</li>
+<li>🔁 <strong>Mismo código x86_64 / ARM64</strong>: <code>opencv-python-headless</code> en desarrollo y
+  <code>python3-opencv</code> del sistema en la UNO Q.</li>
+<li>🧪 <strong>41 tests automatizados</strong> con imágenes sintéticas (sin necesidad de cámara
+  ni hardware).</li>
+</ul>
+<hr/>
+<h2 id="principio-de-funcionamiento">Principio de funcionamiento</h2>
+<h3 id="pipeline-completo">Pipeline completo</h3>
+<pre><code>                        /dev/video0  (webcam USB UVC)
+                              │
+                              │  V4L2 · MJPG · 640×480 · 15 fps
+                              ▼
+                 ┌─────────────────────────┐
+                 │  CameraCapture (hilo)   │
+                 │  · abre V4L2 y reintenta│
+                 │  · publica last_frame   │
+                 │  · frame_queue(maxsize=2)│
+                 └───────┬─────────┬───────┘
+                         │         │
+        last_frame ──────┘         └──────► frame_queue
+             │                                    │
+             ▼                                    ▼
+     /stream.mjpg                     ┌──────────────────────────────┐
+     (MJPEG a 15 fps)                 │  BoardDetector (hilo)        │
+                                      │  1. escala de grises         │
+                                      │  2. ORB: 500 keypoints       │
+                                      │  3. knnMatch Hamming k=2     │
+                                      │  4. ratio test de Lowe 0.75  │
+                                      │  5. homografía RANSAC (5 px) │
+                                      │  6. caja + score + NMS       │
+                                      └──────────────┬───────────────┘
+                                                     │ list[Detection]
+                                                     ▼
+                                      GET /api/detections  ◄── polling 250 ms
+                                                     │
+                                                     ▼
+                                      &lt;canvas&gt;: recuadro verde + globo cómic
+</code></pre>
+<h3 id="1-captura">1. Captura</h3>
+<p>El hilo <code>CameraCapture</code> abre la cámara con el backend <strong>V4L2</strong> (y cae a
+<code>CAP_ANY</code> si el driver no lo acepta), pide formato <strong>MJPG</strong>, 640×480 y 15 fps,
+y publica cada frame en dos lugares distintos:</p>
+<ul>
+<li><code>last_frame</code>: lo consume el stream MJPEG (siempre el frame más reciente, sin
+  bloquear).</li>
+<li><code>frame_queue</code>: cola acotada a <strong>2</strong> frames para el detector. Si se llena, se
+  descarta el frame viejo: al detector le interesa el presente, no acumular
+  atraso.</li>
+</ul>
+<p>Si la cámara no está disponible, publica un <strong>frame sintético de estado</strong>
+(<code>CAMARA NO DISPONIBLE</code>) y reintenta abrirla cada 2 segundos. El texto se dibuja
+sin acentos porque las fuentes Hershey de OpenCV no los representan.</p>
+<h3 id="2-extraccion-de-caracteristicas-orb">2. Extracción de características: ORB</h3>
+<p>Por cada frame, el detector convierte a grises y calcula <strong>ORB</strong> (<em>Oriented FAST
+and Rotated BRIEF</em>):</p>
+<ul>
+<li><strong>FAST</strong> detecta esquinas de forma muy rápida.</li>
+<li><strong>BRIEF</strong> describe cada esquina con un vector binario de 256 bits (32 bytes),
+  invariante a rotación.</li>
+<li>Se piden como máximo <strong>500 keypoints</strong> (<code>ORB_FEATURES</code>), con umbral de borde 31
+  y parche 31, puntuación Harris.</li>
+</ul>
+<p>La ventaja para este proyecto: ORB ya viene dentro de OpenCV, es liviano para
+ARM64 sin GPU y funciona bien con la <strong>textura impresa de las placas</strong>
+(silkscreen, serigrafía, conectores, pines, componentes).</p>
+<h3 id="3-matching-bfmatcher-ratio-test-de-lowe">3. Matching: BFMatcher + ratio test de Lowe</h3>
+<p>Cada plantilla guardada se compara contra los descriptores del frame con
+<code>BFMatcher(NORM_HAMMING)</code> y <code>knnMatch(k=2)</code>. Para cada descriptor de la plantilla
+se obtienen sus dos mejores candidatos en el frame; el match se acepta solo si:</p>
+<pre><code>distancia(mejor) &lt; 0.75 × distancia(segundo mejor)
+</code></pre>
+<p>Es el <strong>ratio test de Lowe</strong>: si el segundo candidato está casi tan cerca como el
+primero, el match es ambiguo y se descarta. Esto elimina la mayoría de los falsos
+positivos antes de la geometría.</p>
+<h3 id="4-homografia-ransac">4. Homografía RANSAC</h3>
+<p>Con los matches aceptados se estima una <strong>homografía</strong> de 3×3 con
+<code>cv2.findHomography(..., cv2.RANSAC, 5.0)</code>. La homografía describe cómo se
+transforma el plano de la imagen enseñada al plano del frame actual (perspectiva,
+rotación, escala). RANSAC descarta los matches que no son geométricamente
+consistentes; solo sobreviven los <strong>inliers</strong>.</p>
+<p>Se exige un mínimo de <strong>10 matches</strong> y <strong>15 inliers</strong>. Luego se proyectan las
+cuatro esquinas del área útil de la plantilla al frame, se obtiene su <em>bounding
+box</em> y se valida:</p>
+<ul>
+<li>polígono finito y no degenerado (el área del polígono debe ser al menos el 20 %
+  del área de su bounding box);</li>
+<li>caja de al menos 8×8 px;</li>
+<li>área entre <strong>2 % y 90 %</strong> del frame.</li>
+</ul>
+<h3 id="5-score-y-falsos-positivos">5. Score y falsos positivos</h3>
+<p>El score combina tres señales:</p>
+<pre><code>score = 0.6 × (inliers / matches)        proporción de matches consistentes
+      + 0.3 × (1 − distancia_media/90)   calidad del apareamiento
+      + 0.1 × min(1, área/2% × 0.5)      tamaño relativo de la detección
+</code></pre>
+<p>Una detección se publica solo si <code>score ≥ 0.35</code>. Después se aplica <strong>NMS</strong>
+(supresión de no máximos, IoU &gt; 0.30) y se <strong>agrupan</strong> detecciones de la misma
+etiqueta cuyos centros estén a menos de <strong>40 px</strong>, conservando la de mayor score.</p>
+<h3 id="6-varias-instancias-del-mismo-modelo">6. Varias instancias del mismo modelo</h3>
+<p>Para admitir dos UNO R3 iguales en el mismo cuadro, el detector repite el
+matching hasta <strong>4 veces por plantilla</strong>. Después de encontrar una instancia,
+<strong>elimina de la búsqueda todos los keypoints del frame que caen dentro de su
+caja</strong> (con 8 px de margen), no solo los inliers. Así el ratio test vuelve a ser
+discriminante para la segunda placa idéntica. Cada instancia recibe un
+<code>instance_id</code> (0, 1, 2…) ordenado por posición horizontal.</p>
+<h3 id="7-del-json-al-canvas">7. Del JSON al canvas</h3>
+<p>El servidor publica las detecciones con <strong>cajas normalizadas</strong> <code>[0, 1]</code> respecto
+del tamaño del frame. El navegador hace polling cada <strong>250 ms</strong>, escala las cajas
+al tamaño real del <code>&lt;img&gt;</code> (incluyendo <code>devicePixelRatio</code> y <code>ResizeObserver</code>) y
+dibuja:</p>
+<ul>
+<li>recuadro verde <code>#00ff3c</code> con glow y esquinas estilo visor;</li>
+<li>globo blanco con borde negro de 3 px, texto en tipografía cómic del sistema;</li>
+<li>colita triangular hacia la placa;</li>
+<li>reubicación automática si el globo se saldría de pantalla o pisaría a otro.</li>
+</ul>
+<h3 id="por-que-no-usa-modelos-externos">¿Por qué no usa modelos externos?</h3>
+<table>
+<thead>
+<tr>
+<th>Motivo</th>
+<th>Consecuencia</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Sin internet en el dispositivo</strong></td>
+<td>Nada que descargar, nada que actualizar, nada que falle sin red.</td>
+</tr>
+<tr>
+<td><strong>OpenCV ya está instalado</strong></td>
+<td>Cero dependencias nuevas en la UNO Q (<code>python3-opencv</code>).</td>
+</tr>
+<tr>
+<td><strong>Enseñanza en el lugar</strong></td>
+<td>Las plantillas se capturan con la cámara y la luz reales del lugar de uso; no hay <em>domain gap</em> entre dataset y realidad.</td>
+</tr>
+<tr>
+<td><strong>Privacidad</strong></td>
+<td>Ni una imagen sale de la LAN; no hay telemetría.</td>
+</tr>
+<tr>
+<td><strong>Costo/espacio</strong></td>
+<td>Sin pesos de modelos, sin GPU, sin RAM extra.</td>
+</tr>
+</tbody>
+</table>
+<p>La contrapartida es que <strong>hay que enseñar cada placa</strong> y que la robustez depende
+de la calidad de las muestras (ver <a href="#modo-enseñar-paso-a-paso">Modo enseñar</a>).
+Para cuatro placas conocidas y una LAN de confianza, el intercambio es muy
+favorable.</p>
+<hr/>
+<h2 id="hardware-y-conexion">Hardware y conexión</h2>
+<h3 id="modo-produccion-todo-corre-en-la-uno-q">Modo producción: todo corre en la UNO Q</h3>
+<pre><code>                    ┌───────────────────────────────────────────────┐
+                    │        Notebook / PC / teléfono               │
+                    │   Navegador:  http://&lt;ip-unoq&gt;:8000/          │
+                    │   (solo HTML/CSS/JS: no procesa video)        │
+                    └──────────────────────┬────────────────────────┘
+                                           │  Wi-Fi · LAN de confianza
+                                           ▼
+                    ┌───────────────────────────────────────────────┐
+                    │        Router Teltonika (LAN + DHCP)          │
+                    │        p. ej. 192.168.1.0/24                  │
+                    └──────────────────────┬────────────────────────┘
+                                           │  Ethernet o Wi-Fi
+                                           ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│  Arduino UNO Q                                                           │
+│                                                                          │
+│  ┌────────────────────────────────────┐  ┌────────────────────────────┐  │
+│  │ Lado Linux · Debian ARM64          │  │ Lado MCU · STM32U585       │  │
+│  │                                    │  │ (Zephyr; no se usa en      │  │
+│  │  app/server.py    :8000            │  │  esta versión)             │  │
+│  │  app/camera.py    V4L2             │  └────────────────────────────┘  │
+│  │  app/detector.py  ORB/RANSAC       │                                  │
+│  │  data/templates/  plantillas .npz  │                                  │
+│  └───────────────┬────────────────────┘                                  │
+│                  │  USB (hub USB-C si hace falta)                        │
+└──────────────────┼───────────────────────────────────────────────────────┘
+                   ▼
+          ┌──────────────────┐
+          │  Webcam USB UVC  │   640×480 · MJPG · 15 fps
+          │  (ej. Logitech)  │
+          └──────────────────┘
+</code></pre>
+<p>Puntos clave:</p>
+<ul>
+<li><strong>La aplicación corre en la UNO Q</strong>, no en el notebook. El notebook solo abre
+  el navegador y consume el stream MJPEG y el JSON.</li>
+<li>La webcam va conectada a la <strong>UNO Q</strong> (directamente o mediante un hub USB-C si
+  no queda un puerto libre). No va a la notebook.</li>
+<li>El router Teltonika solo transporta tráfico IP; <strong>no se modifica su
+  configuración</strong>.</li>
+<li>La placa necesita una dirección IP alcanzable desde el notebook. El modo
+  habitual es DHCP en la misma LAN.</li>
+</ul>
+<h3 id="modo-desarrollo-todo-corre-en-el-notebook">Modo desarrollo: todo corre en el notebook</h3>
+<pre><code>┌──────────────┐   USB   ┌─────────────────────────────────────┐
+│ Webcam USB   │────────►│ Notebook Linux x86_64               │
+└──────────────┘         │  .venv + opencv-python-headless     │
+                         │  python -m app.server (:8000)       │
+                         │  Navegador: http://localhost:8000/  │
+                         └─────────────────────────────────────┘
+</code></pre>
+<p>Es el modo recomendado para probar cambios de código, porque compilar y
+reiniciar es inmediato y no depende del estado de la placa.</p>
+<h3 id="alimentacion-y-puertos">Alimentación y puertos</h3>
+<table>
+<thead>
+<tr>
+<th>Elemento</th>
+<th>Conexión</th>
+<th>Nota</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Arduino UNO Q</td>
+<td>Fuente USB-C con suficiente corriente</td>
+<td>Alimenta también el hub y la webcam</td>
+</tr>
+<tr>
+<td>Webcam USB</td>
+<td>Puerto USB de la UNO Q o hub USB-C</td>
+<td>UVC estándar; MJPG recomendado</td>
+</tr>
+<tr>
+<td>Red</td>
+<td>Ethernet o Wi-Fi de la UNO Q</td>
+<td>La IP debe ser fija o reservada en DHCP</td>
+</tr>
+<tr>
+<td>Notebook</td>
+<td>Wi-Fi/LAN al mismo router</td>
+<td>Solo navegador</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Si la webcam consume más corriente de la que entrega el puerto, usá un <strong>hub
+USB-C con alimentación</strong>. Los síntomas típicos son desconexiones intermitentes
+y <code>camera.present=false</code> en <code>/api/health</code>.</p>
+</blockquote>
+<hr/>
+<h2 id="requisitos">Requisitos</h2>
+<h3 id="hardware">Hardware</h3>
+<ul>
+<li>Arduino UNO Q (lado Linux Debian ARM64) <strong>o</strong> notebook Linux x86_64.</li>
+<li>Webcam USB <strong>UVC</strong> (clase de video estándar, sin drivers propietarios).</li>
+<li>Hub USB-C si hace falta conectar la webcam y alimentar la placa.</li>
+<li>Router con DHCP y LAN accesible desde el navegador.</li>
+</ul>
+<h3 id="software">Software</h3>
+<table>
+<thead>
+<tr>
+<th>Componente</th>
+<th>Notebook (desarrollo)</th>
+<th>UNO Q (producción)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python</td>
+<td>3.10+ (probado con 3.12)</td>
+<td><code>python3</code> del sistema</td>
+</tr>
+<tr>
+<td>OpenCV</td>
+<td><code>opencv-python-headless&gt;=4.8,&lt;6</code> (venv)</td>
+<td><code>python3-opencv</code> (apt)</td>
+</tr>
+<tr>
+<td>Utilidades de cámara</td>
+<td><code>v4l-utils</code> (opcional)</td>
+<td><code>v4l-utils</code> (recomendado)</td>
+</tr>
+<tr>
+<td>Tests</td>
+<td><code>pytest&gt;=7.4</code>, <code>requests&gt;=2.31</code></td>
+<td>no se instalan</td>
+</tr>
+<tr>
+<td>Servidor</td>
+<td>biblioteca estándar <code>http.server</code></td>
+<td>biblioteca estándar</td>
+</tr>
+<tr>
+<td>Navegador</td>
+<td>Chrome/Firefox/Edge actualizado</td>
+<td>cualquiera en la LAN</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>No hay <code>requirements.txt</code> de runtime.</strong> En la UNO Q se usa el paquete del
+sistema <code>python3-opencv</code> (sin <code>pip</code>, sin venv). Las dependencias del notebook
+están en <strong><code>requirements-dev.txt</code></strong>.</p>
+</blockquote>
+<h3 id="verificar-la-camara">Verificar la cámara</h3>
+<pre><code class="language-bash">ls -l /dev/video*
+# crw-rw----+ 1 root video 81, 0 ... /dev/video0
+
+v4l2-ctl --list-devices          # requiere v4l-utils
+v4l2-ctl -d /dev/video0 --all | head -40
+</code></pre>
+<p>Si el usuario no pertenece al grupo <code>video</code>:</p>
+<pre><code class="language-bash">sudo usermod -aG video "$USER"
+# cerrar sesión y volver a entrar (o reiniciar el servicio)
+</code></pre>
+<hr/>
+<h2 id="puesta-en-marcha-local-notebook">Puesta en marcha local (notebook)</h2>
+<h3 id="opcion-a-script-todo-en-uno-recomendado">Opción A — script todo-en-uno (recomendado)</h3>
+<pre><code class="language-bash">cd detector-tarjetas
+./scripts/run_local.sh
+</code></pre>
+<p>El script:</p>
+<ol>
+<li>crea <code>.venv</code> si no existe (<code>python3 -m venv .venv</code>);</li>
+<li>activa el entorno e instala <code>requirements-dev.txt</code>;</li>
+<li>exporta <code>PORT=8000</code>, <code>CAMERA_INDEX=0</code>, <code>HOST=0.0.0.0</code>;</li>
+<li>ejecuta <code>python -m app.server</code>.</li>
+</ol>
+<p>Luego abrí:</p>
+<pre><code>http://localhost:8000/
+</code></pre>
+<p>Variables útiles del script:</p>
+<pre><code class="language-bash">PORT=8010 ./scripts/run_local.sh          # otro puerto
+CAMERA_INDEX=2 ./scripts/run_local.sh     # /dev/video2
+HOST=127.0.0.1 ./scripts/run_local.sh     # solo localhost
+SKIP_INSTALL=1 ./scripts/run_local.sh     # no reinstalar dependencias
+PYTHON_BIN=python3.12 ./scripts/run_local.sh
+VENV_DIR=/tmp/venv-detector ./scripts/run_local.sh
+</code></pre>
+<h3 id="opcion-b-manual">Opción B — manual</h3>
+<pre><code class="language-bash">python3 -m venv venv
+source venv/bin/activate          # Linux / macOS
+# venv\Scripts\activate           # Windows
+
+pip install -r requirements-dev.txt
+python -m app.server
+</code></pre>
+<h3 id="verificar-que-esta-vivo">Verificar que está vivo</h3>
+<pre><code class="language-bash">curl -s http://localhost:8000/api/health | python3 -m json.tool
+</code></pre>
+<p>Respuesta esperada (abreviada):</p>
+<pre><code class="language-json">{
+  "status": "ok",
+  "camera": {"present": true, "resolution": [640, 480], "fps": 14.8, "index": 0},
+  "templates": {
+    "count": 0,
+    "labels": [],
+    "by_label": {
+      "arduino_nano": 0,
+      "arduino_uno_r3": 0,
+      "raspberry_pi_4": 0,
+      "raspberry_pi_5": 0
+    },
+    "loaded": {}
+  },
+  "detector": {"last_inference_ms": 0.0, "inferences": 0},
+  "uptime_s": 3.1,
+  "version": "1.0.0"
+}
+</code></pre>
+<ul>
+<li><code>camera.present=true</code> → la webcam entrega frames.</li>
+<li><code>camera.present=false</code> → la app funciona igual, pero muestra el frame de estado.</li>
+<li><code>templates.count=0</code> → todavía no hay plantillas: hay que entrenar.</li>
+</ul>
+<h3 id="tests">Tests</h3>
+<pre><code class="language-bash">source venv/bin/activate
+python -m compileall app tests
+pytest -q
+</code></pre>
+<p>Resultado verificado en este equipo: <strong>41 passed</strong>.</p>
+<hr/>
+<h2 id="despliegue-en-la-arduino-uno-q">Despliegue en la Arduino UNO Q</h2>
+<blockquote>
+<p><strong>Prerrequisito:</strong> la UNO Q debe ser alcanzable por red y tener SSH habilitado.
+Si no lo está, saltá a <a href="#fallback-usb-c--adb--app-lab">Fallback USB-C / ADB / App Lab</a>.</p>
+</blockquote>
+<h3 id="paso-1-descubrir-la-placa-en-la-lan">Paso 1 — Descubrir la placa en la LAN</h3>
+<pre><code class="language-bash">./scripts/discover_unoq.sh
+# o acotando el rango:
+./scripts/discover_unoq.sh --subnet 192.168.1.0/24
+# solo tabla ARP, sin barrido:
+./scripts/discover_unoq.sh --no-ping
+</code></pre>
+<p>El script es <strong>no invasivo</strong>: no toca routers ni configuración de red. Muestra
+interfaces e IPs del notebook, vecinos ARP, hace ping a cada host y prueba los
+puertos <strong>22, 80, 443, 8000 y 8080</strong> con timeout corto. Clasifica:</p>
+<table>
+<thead>
+<tr>
+<th>Hallazgo</th>
+<th>Interpretación</th>
+<th>Acción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Puerto 8000 responde <code>/api/health</code></td>
+<td>La app <strong>ya está desplegada</strong></td>
+<td>Abrir <code>http://&lt;ip&gt;:8000/</code></td>
+</tr>
+<tr>
+<td>Puerto 22 abierto (con banner SSH)</td>
+<td>SSH disponible</td>
+<td><code>./scripts/deploy.sh --host &lt;ip&gt; --user arduino</code></td>
+</tr>
+<tr>
+<td>Host vivo y <strong>cero puertos TCP</strong></td>
+<td>Probable UNO Q con SSH deshabilitado</td>
+<td>Fallback USB-C / ADB / App Lab</td>
+</tr>
+<tr>
+<td>Nada responde</td>
+<td>Otra subred o Wi-Fi distinta</td>
+<td>Repetir con <code>--subnet</code> correcta</td>
+</tr>
+</tbody>
+</table>
+<p>Variables: <code>PING_TIMEOUT=1</code>, <code>PORT_TIMEOUT=1</code>, <code>MAX_PARALLEL=32</code>,
+<code>PORTS="22 80 443 8000 8080"</code>; opción <code>--candidate &lt;ip&gt;</code> para priorizar un
+candidato conocido en el informe.</p>
+<h3 id="paso-2-desplegar-por-ssh">Paso 2 — Desplegar por SSH</h3>
+<pre><code class="language-bash"># con clave SSH ya configurada
+./scripts/deploy.sh --host 192.168.1.4 --user arduino
+
+# probando contraseñas por defecto (requiere sshpass)
+./scripts/deploy.sh --host 192.168.1.4 --user arduino --try-defaults
+
+# con contraseña explícita (requiere sshpass; no se guarda en el repo)
+UNOQ_PASSWORD='...' ./scripts/deploy.sh --host 192.168.1.4 --user arduino
+
+# puerto o directorio alternativos
+./scripts/deploy.sh --host 192.168.1.4 --app-port 8080 \
+                    --remote-dir /home/arduino/detector-tarjetas
+</code></pre>
+<p>Qué hace <code>deploy.sh</code>, en orden:</p>
+<ol>
+<li>Valida todos los parámetros con <em>allowlists</em> (<code>[A-Za-z0-9_-]</code>, puertos
+   1–65535, ruta remota absoluta sin <code>..</code>) y los escapa con <code>printf %q</code> antes de
+   interpolarlos en comandos remotos.</li>
+<li>Prueba SSH (clave; opcionalmente <code>sshpass</code> con <code>--try-defaults</code>, que intenta
+   <code>arduino</code>, <code>unoq</code> y <code>root</code>).</li>
+<li>Copia el proyecto con <strong><code>tar</code> sobre SSH</strong> (sin <code>rsync</code>), excluyendo <code>.venv</code>,
+   <code>venv</code>, <code>.git</code>, <code>__pycache__</code>, <code>.pytest_cache</code>, <code>PLAN.md</code>, <code>AUDIT_REPORT.md</code> y
+   las muestras <code>data/templates/*</code>. <strong>Las muestras existentes en la placa se
+   preservan</strong> (solo se asegura que el directorio exista).</li>
+<li>Verifica <code>import cv2</code>; si falta, instala <code>python3-opencv</code> y <code>v4l-utils</code> con
+   <code>apt</code> usando <code>sudo -n</code>. Si <code>sudo</code> pide contraseña, imprime los comandos
+   exactos y termina con código 3.</li>
+<li>Genera la unidad systemd con el usuario, directorio y <code>PORT</code> elegidos, la
+   instala en <code>/etc/systemd/system/</code>, agrega el usuario al grupo <code>video</code> si
+   existe, hace <code>daemon-reload</code>, <code>enable</code> y <code>restart</code>.</li>
+<li>Espera 3 s y verifica <code>http://127.0.0.1:8000/api/health</code> desde la propia
+   placa (<code>curl</code> o <code>urllib</code>). Si no responde, muestra los últimos 25 renglones de
+   <code>journalctl</code>.</li>
+</ol>
+<p>Al final imprime:</p>
+<pre><code>Web local en la UNO Q : http://127.0.0.1:8000/
+Web desde la notebook : http://&lt;ip&gt;:8000/
+Stream MJPEG          : http://&lt;ip&gt;:8000/stream.mjpg
+</code></pre>
+<p>Códigos de salida: <code>2</code> SSH inaccesible, <code>3</code> hace falta sudo manual, <code>4</code> falta
+<code>adb</code>, <code>5</code> el servicio no respondió.</p>
+<h3 id="paso-3-servicio-systemd-manual-si-hace-falta">Paso 3 — Servicio systemd (manual, si hace falta)</h3>
+<p>La unidad versionada es <code>systemd/detector-tarjetas.service</code>:</p>
+<pre><code class="language-ini">[Unit]
+Description=Detector de tarjetas electronicas (ORB) - Arduino UNO Q
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=arduino
+WorkingDirectory=/home/arduino/detector-tarjetas
+Environment=PYTHONUNBUFFERED=1
+Environment=PORT=8000
+Environment=CAMERA_INDEX=0
+Environment=LOG_LEVEL=INFO
+ExecStart=/usr/bin/python3 -m app.server
+Restart=always
+RestartSec=3
+SupplementaryGroups=video
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+</code></pre>
+<p>Instalación manual:</p>
+<pre><code class="language-bash">sudo install -m 644 systemd/detector-tarjetas.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now detector-tarjetas
+sudo systemctl status detector-tarjetas
+sudo journalctl -u detector-tarjetas -f
+</code></pre>
+<blockquote>
+<p><code>deploy.sh</code> ajusta <code>User=</code>, <code>WorkingDirectory=</code> y <code>Environment=PORT=</code> con <code>sed</code>
+antes de instalar la unidad. Si el grupo <code>video</code> no existe en la placa, elimina
+<code>SupplementaryGroups=video</code> para que el servicio no falle.</p>
+</blockquote>
+<h3 id="fallback-usb-c-adb-app-lab">Fallback USB-C / ADB / App Lab</h3>
+<p>Si la UNO Q <strong>responde ping pero no tiene puertos TCP abiertos</strong> (SSH
+deshabilitado), no hace falta tocar la red. Conectala por <strong>USB-C</strong> a la notebook.</p>
+<h4 id="opcion-a-adb">Opción A — ADB</h4>
+<pre><code class="language-bash">adb devices
+./scripts/deploy.sh --via-adb
+# con varios dispositivos:
+./scripts/deploy.sh --via-adb --adb-serial &lt;serial&gt;
+</code></pre>
+<p>El modo <code>--via-adb</code>:</p>
+<ol>
+<li>empaqueta el proyecto en un <code>.tar.gz</code> temporal (mismos excludes);</li>
+<li><code>adb push</code> a <code>/tmp/detector-tarjetas.tar.gz</code> y extrae en
+   <code>/home/arduino/detector-tarjetas</code>;</li>
+<li>verifica <code>import cv2</code>; si falta, intenta
+   <code>sudo apt-get update &amp;&amp; sudo apt-get install -y python3-opencv v4l-utils</code>;</li>
+<li>copia e instala la unidad systemd y hace <code>enable --now</code>;</li>
+<li>imprime el comando de verificación con <code>urllib</code>.</li>
+</ol>
+<p>Si <code>adb</code> no está instalado, el script termina con código 4 y sugiere las
+alternativas (instalarlo con autorización del usuario, usar App Lab, o habilitar
+SSH).</p>
+<h4 id="opcion-b-arduino-app-lab">Opción B — Arduino App Lab</h4>
+<ol>
+<li>Abrí <strong>Arduino App Lab</strong> y conectá la UNO Q por USB-C.</li>
+<li>Entrá a la <strong>terminal del lado Linux</strong>.</li>
+<li>Habilitá SSH y volvé al despliegue por red:</li>
+</ol>
+<p><code>bash
+   sudo systemctl enable --now ssh</code></p>
+<p>o copiá la carpeta del proyecto al directorio de la app.
+4. Instalá dependencias:</p>
+<p><code>bash
+   sudo apt-get update &amp;&amp; sudo apt-get install -y python3-opencv v4l-utils</code></p>
+<ol start="5">
+<li>Probá a mano:</li>
+</ol>
+<p><code>bash
+   cd detector-tarjetas
+   python3 -m app.server</code></p>
+<h4 id="opcion-c-habilitar-ssh-desde-la-placa">Opción C — habilitar SSH desde la placa</h4>
+<p>Si tenés teclado/monitor o acceso a la terminal de App Lab:</p>
+<pre><code class="language-bash">sudo systemctl enable --now ssh
+ip -4 addr show          # anotar la IP
+</code></pre>
+<p>Y desde la notebook:</p>
+<pre><code class="language-bash">./scripts/discover_unoq.sh
+./scripts/deploy.sh --host &lt;ip&gt; --user arduino
+</code></pre>
+<hr/>
+<h2 id="modo-ensenar-paso-a-paso">Modo enseñar paso a paso</h2>
+<p>La detección <strong>no funciona sin plantillas</strong>. Enseñar una placa genera uno o más
+archivos <code>.npz</code> en <code>data/templates/&lt;etiqueta&gt;/</code>; el detector los carga en
+caliente y empieza a reconocerla.</p>
+<h3 id="procedimiento">Procedimiento</h3>
+<ol>
+<li><strong>Abrí <code>/teach</code></strong> desde la barra superior del detector (“🎓 Modo enseñar”).</li>
+<li><strong>Elegí la etiqueta</strong> en el desplegable:
+   <code>arduino_uno_r3</code>, <code>arduino_nano</code>, <code>raspberry_pi_4</code>, <code>raspberry_pi_5</code>.</li>
+<li><strong>Encuadrá la placa</strong>:
+   - buena luz difusa, sin sombras duras;
+   - fondo <strong>contrastado y liso</strong> (una hoja oscura o una mesa mate funciona bien);
+   - la placa debe ocupar entre el <strong>30 % y el 70 %</strong> del cuadro;
+   - incluí el <strong>silkscreen</strong> (texto impreso) y los conectores: son la mejor
+     textura para ORB.</li>
+<li><strong>Capturá 10–20 muestras</strong> variando:
+   - ángulo de inclinación (±30° en horizontal y vertical);
+   - distancia (20–60 cm);
+   - posición dentro del cuadro (centro y bordes);
+   - iluminación (luz cálida/fría, sombra suave).
+   La UI sugiere “3 y 5 muestras” para una prueba rápida; para uso real conviene
+   <strong>10–20</strong> por placa.</li>
+<li><strong>Recargá</strong>: cada captura ya recarga el detector automáticamente. El botón
+   “🔄 Entrenar / recargar” fuerza una recarga completa desde disco.</li>
+<li><strong>Verificá</strong> en <code>/api/health</code> que <code>templates.count</code> subió y que
+   <code>templates.loaded</code> muestra la etiqueta.</li>
+<li><strong>Volvé al detector</strong> (<code>/</code>) y apuntá la cámara: la placa debe aparecer con
+   recuadro y globo.</li>
+</ol>
+<h3 id="que-guarda-cada-muestra">Qué guarda cada muestra</h3>
+<p>Cada captura guarda <strong>un frame completo procesado con ORB</strong>, no un recorte:</p>
+<table>
+<thead>
+<tr>
+<th>Campo <code>NPZ</code></th>
+<th>Tipo</th>
+<th>Contenido</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>label</code></td>
+<td>Unicode 0-d</td>
+<td>Etiqueta limpia (<code>arduino_uno_r3</code>)</td>
+</tr>
+<tr>
+<td><code>descriptors</code></td>
+<td><code>uint8 (N, 32)</code></td>
+<td>Descriptores ORB</td>
+</tr>
+<tr>
+<td><code>points</code></td>
+<td><code>float32 (N, 2)</code></td>
+<td>Coordenadas <code>(x, y)</code> de cada keypoint</td>
+</tr>
+<tr>
+<td><code>sizes</code></td>
+<td><code>float32 (N,)</code></td>
+<td>Tamaño del parche</td>
+</tr>
+<tr>
+<td><code>angles</code></td>
+<td><code>float32 (N,)</code></td>
+<td>Orientación</td>
+</tr>
+<tr>
+<td><code>responses</code></td>
+<td><code>float32 (N,)</code></td>
+<td>Respuesta del detector</td>
+</tr>
+<tr>
+<td><code>octaves</code></td>
+<td><code>int32 (N,)</code></td>
+<td>Octava de la pirámide</td>
+</tr>
+<tr>
+<td><code>class_ids</code></td>
+<td><code>int32 (N,)</code></td>
+<td><code>-1</code> si no aplica</td>
+</tr>
+<tr>
+<td><code>image_size</code></td>
+<td><code>int32 (2,)</code></td>
+<td><code>(ancho, alto)</code> de la imagen origen</td>
+</tr>
+</tbody>
+</table>
+<p>Se requiere un mínimo de <strong>50 keypoints</strong> por muestra. Si ORB encuentra menos,
+el servidor responde <strong>422</strong> con el mensaje <em>“Pocos puntos característicos
+(N/50). Acercá la placa, mejorá la luz o evitá fondos lisos.”</em> y <strong>no</strong> escribe
+el archivo.</p>
+<h3 id="consejos-de-calibracion">Consejos de calibración</h3>
+<table>
+<thead>
+<tr>
+<th>✅ Hacer</th>
+<th>❌ Evitar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fondo mate y liso, de color opuesto a la placa</td>
+<td>Fondo de madera veteada o cables enredados</td>
+</tr>
+<tr>
+<td>Luz difusa (nublado, lámpara rebotada)</td>
+<td>Reflejos directos sobre el PCB</td>
+</tr>
+<tr>
+<td>Incluir el texto impreso y los conectores</td>
+<td>Tapar el microcontrolador con el dedo</td>
+</tr>
+<tr>
+<td>Variar ángulo, distancia y posición</td>
+<td>10 fotos desde el mismo lugar</td>
+</tr>
+<tr>
+<td>Encuadrar la placa completa con margen</td>
+<td>Recortar los bordes de la placa</td>
+</tr>
+<tr>
+<td>Enseñar también la cara trasera si se va a mostrar</td>
+<td>Enseñar solo una cara y girarla</td>
+</tr>
+<tr>
+<td>Capturar con la cámara y la luz definitivas</td>
+<td>Entrenar con otra cámara/otra habitación</td>
+</tr>
+</tbody>
+</table>
+<h3 id="borrar-muestras">Borrar muestras</h3>
+<p>En <code>/teach</code>, sección “3. Muestras guardadas”:</p>
+<ul>
+<li><strong>🗑️ Borrar muestras de esta etiqueta</strong> → elimina solo <code>data/templates/&lt;label&gt;/*.npz</code>.</li>
+<li><strong>Borrar todas</strong> → envía <code>{"label":"__all__"}</code> y borra todas las muestras de
+  todas las etiquetas.</li>
+</ul>
+<p>Ambas acciones piden confirmación y recargan el detector al terminar.</p>
+<hr/>
+<h2 id="uso-diario">Uso diario</h2>
+<ol>
+<li><strong>Abrí</strong> <code>http://&lt;ip-unoq&gt;:8000/</code> (o <code>http://localhost:8000/</code> en el notebook).</li>
+<li><strong>Esperá el primer frame</strong>. El placeholder “Esperando video…” desaparece
+   cuando llega el stream.</li>
+<li><strong>Apuntá la cámara</strong> a una o más placas.</li>
+<li><strong>Interpretá la escena</strong>:
+   - recuadro verde con esquinas → placa detectada;
+   - globo blanco → nombre corto + <code>MCU</code>, <code>RAM</code>, <code>Reloj</code>;
+   - píldora de estado → <code>en vivo · N fps</code>, <code>sin cámara</code> o <code>sin conexión</code>.</li>
+<li><strong>Hacé clic</strong> sobre la placa o su globo para abrir la ficha completa en el
+   panel lateral. Se cierra con <code>×</code> o con la tecla <code>Esc</code>.</li>
+<li><strong>Varias placas a la vez</strong>: cada etiqueta distinta se dibuja por separado; dos
+   copias del mismo modelo reciben <code>instance_id</code> 0 y 1 y se dibujan como dos
+   recuadros independientes.</li>
+</ol>
+<h3 id="senales-de-la-interfaz">Señales de la interfaz</h3>
+<table>
+<thead>
+<tr>
+<th>Elemento</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Banner amarillo “No se detecta la cámara”</td>
+<td><code>camera.present=false</code>; se muestra un frame de estado</td>
+</tr>
+<tr>
+<td>Banner azul “Todavía no hay plantillas”</td>
+<td><code>templates.count=0</code>; hay que ir a <code>/teach</code></td>
+</tr>
+<tr>
+<td>Píldora <code>en vivo · N fps</code></td>
+<td>Cámara entregando frames; N es la media móvil</td>
+</tr>
+<tr>
+<td>Píldora <code>sin cámara</code></td>
+<td>Cámara ausente o ocupada</td>
+</tr>
+<tr>
+<td>Píldora <code>sin conexión</code></td>
+<td>El polling a <code>/api/detections</code> o <code>/api/health</code> falló</td>
+</tr>
+<tr>
+<td><code>inferencia N ms</code> bajo el video</td>
+<td>Duración de la última inferencia</td>
+</tr>
+<tr>
+<td>Pie de página</td>
+<td><code>N detección(es) · M muestra(s) · K etiqueta(s) entrenada(s)</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="atajos">Atajos</h3>
+<table>
+<thead>
+<tr>
+<th>Acción</th>
+<th>Cómo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Abrir ficha</td>
+<td>Clic en la placa o en el globo</td>
+</tr>
+<tr>
+<td>Cerrar ficha</td>
+<td>Botón <code>×</code> o tecla <code>Esc</code></td>
+</tr>
+<tr>
+<td>Ir a enseñar</td>
+<td>Botón “🎓 Modo enseñar”</td>
+</tr>
+<tr>
+<td>Volver al detector</td>
+<td>“← Volver al detector” en <code>/teach</code></td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="fichas-tecnicas-incluidas">Fichas técnicas incluidas</h2>
+<p><code>data/boards.json</code> trae cuatro fichas completas. Estos son los datos que se
+muestran en el panel lateral y los que resumen los globos:</p>
+<table>
+<thead>
+<tr>
+<th>Etiqueta</th>
+<th>Placa</th>
+<th>MCU / SoC</th>
+<th>Reloj</th>
+<th>RAM</th>
+<th>Almacenamiento</th>
+<th>GPIO</th>
+<th>Voltaje</th>
+<th>Dimensiones</th>
+<th>Año</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>arduino_uno_r3</code></td>
+<td>Arduino UNO R3</td>
+<td>ATmega328P (AVR 8 bits)</td>
+<td>16 MHz</td>
+<td>2 KB</td>
+<td>32 KB</td>
+<td>20</td>
+<td>5 V</td>
+<td>68.6 × 53.4 mm</td>
+<td>2012</td>
+</tr>
+<tr>
+<td><code>arduino_nano</code></td>
+<td>Arduino Nano (R3)</td>
+<td>ATmega328P (AVR 8 bits)</td>
+<td>16 MHz</td>
+<td>2 KB</td>
+<td>32 KB</td>
+<td>22</td>
+<td>5 V</td>
+<td>45 × 18 mm</td>
+<td>2008</td>
+</tr>
+<tr>
+<td><code>raspberry_pi_4</code></td>
+<td>Raspberry Pi 4 Model B</td>
+<td>Broadcom BCM2711 (Cortex-A72, 4 núcleos)</td>
+<td>1.5 GHz</td>
+<td>2 GB</td>
+<td>microSD</td>
+<td>40</td>
+<td>5 V</td>
+<td>85 × 56 mm</td>
+<td>2019</td>
+</tr>
+<tr>
+<td><code>raspberry_pi_5</code></td>
+<td>Raspberry Pi 5</td>
+<td>Broadcom BCM2712 (Cortex-A76, 4 núcleos)</td>
+<td>2.4 GHz</td>
+<td>4 GB</td>
+<td>microSD</td>
+<td>40</td>
+<td>5 V</td>
+<td>85 × 56 mm</td>
+<td>2023</td>
+</tr>
+</tbody>
+</table>
+<p>Conectividad:</p>
+<table>
+<thead>
+<tr>
+<th>Placa</th>
+<th>Conectividad</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UNO R3</td>
+<td>USB-B, UART, I2C, SPI, ICSP</td>
+</tr>
+<tr>
+<td>Nano</td>
+<td>Mini-USB, UART, I2C, SPI, ICSP</td>
+</tr>
+<tr>
+<td>Pi 4</td>
+<td>Wi-Fi 5, Bluetooth 5.0, Gigabit Ethernet, USB 3.0, micro-HDMI, GPIO 40 pines</td>
+</tr>
+<tr>
+<td>Pi 5</td>
+<td>Wi-Fi 5, Bluetooth 5.0, Gigabit Ethernet, USB 3.0, micro-HDMI, PCIe 2.0 x1, GPIO 40 pines</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Los datos son editables.</strong> <code>data/boards.json</code> es la fuente de verdad de la
+interfaz. Si agregás una placa, agregá también su etiqueta y enseñala desde
+<code>/teach</code>. El archivo se valida al cargar y los cambios se detectan por
+<code>mtime</code>/tamaño sin reiniciar el servidor.</p>
+</blockquote>
+<hr/>
+<h2 id="api-http">API HTTP</h2>
+<p>Todo se sirve desde el mismo puerto (8000 por defecto), sin autenticación y con
+CORS <code>*</code>. Las respuestas JSON usan <code>Cache-Control: no-store</code>; los estáticos se
+cachean 1 hora.</p>
+<table>
+<thead>
+<tr>
+<th>Método</th>
+<th>Ruta</th>
+<th>Descripción</th>
+<th>Códigos</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td><code>/</code> · <code>/index.html</code></td>
+<td>Página principal (detector)</td>
+<td>200</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/teach</code> · <code>/teach/</code> · <code>/teach.html</code></td>
+<td>Página del modo enseñar</td>
+<td>200</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/static/*</code></td>
+<td>CSS/JS/imágenes (con protección de <em>path traversal</em>)</td>
+<td>200, 403, 404</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/stream.mjpg</code></td>
+<td>Stream MJPEG <code>multipart/x-mixed-replace</code></td>
+<td>200</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/detections</code></td>
+<td>Detecciones actuales + datos de ficha</td>
+<td>200</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/boards</code></td>
+<td>Fichas técnicas completas + formateadas + resumen</td>
+<td>200, 500</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/health</code></td>
+<td>Estado de cámara, plantillas y detector</td>
+<td>200</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/teach/samples</code></td>
+<td>Conteo de muestras por etiqueta</td>
+<td>200</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/favicon.ico</code></td>
+<td>Sin contenido</td>
+<td>204</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/teach/capture</code></td>
+<td>Captura una muestra del frame actual</td>
+<td>200, 400, 422, 500</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/teach/reset</code></td>
+<td>Borra muestras de una etiqueta o todas</td>
+<td>200, 400</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/teach/reload</code></td>
+<td>Recarga plantillas en caliente (body opcional)</td>
+<td>200, 400</td>
+</tr>
+<tr>
+<td>OPTIONS</td>
+<td>cualquiera</td>
+<td>Preflight CORS</td>
+<td>204</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>ruta desconocida</td>
+<td>Error JSON</td>
+<td>404</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ejemplos-con-curl">Ejemplos con <code>curl</code></h3>
+<pre><code class="language-bash">BASE=http://localhost:8000
+
+# Salud del sistema
+curl -s "$BASE/api/health" | python3 -m json.tool
+
+# Detecciones actuales
+curl -s "$BASE/api/detections" | python3 -m json.tool
+
+# Fichas técnicas (4 placas, con formatted y summary)
+curl -s "$BASE/api/boards" | python3 -m json.tool
+
+# Conteo de muestras por etiqueta
+curl -s "$BASE/api/teach/samples" | python3 -m json.tool
+
+# Capturar una muestra para Arduino UNO R3
+curl -s -X POST "$BASE/api/teach/capture" \
+     -H 'Content-Type: application/json' \
+     -d '{"label":"arduino_uno_r3"}' | python3 -m json.tool
+
+# Recargar plantillas (no requiere body)
+curl -s -X POST "$BASE/api/teach/reload" | python3 -m json.tool
+
+# Borrar las muestras de una etiqueta
+curl -s -X POST "$BASE/api/teach/reset" \
+     -H 'Content-Type: application/json' \
+     -d '{"label":"arduino_uno_r3"}' | python3 -m json.tool
+
+# Borrar TODAS las muestras
+curl -s -X POST "$BASE/api/teach/reset" \
+     -H 'Content-Type: application/json' \
+     -d '{"label":"__all__"}' | python3 -m json.tool
+
+# Guardar 3 segundos de stream MJPEG (multipart concatenado, no un JPEG único)
+curl -s --max-time 3 "$BASE/stream.mjpg" -o /tmp/stream.mjpg
+</code></pre>
+<h3 id="get-apidetections"><code>GET /api/detections</code></h3>
+<pre><code class="language-json">{
+  "timestamp": 1763068800.123,
+  "detections": [
+    {
+      "label": "arduino_uno_r3",
+      "score": 0.912,
+      "box": {"x": 0.2141, "y": 0.3056, "w": 0.4125, "h": 0.3187},
+      "instance_id": 0,
+      "inliers": 87,
+      "name": "Arduino UNO R3",
+      "short_name": "UNO R3",
+      "summary": {"MCU": "ATmega328P", "RAM": "2 KB", "Reloj": "16 MHz"}
+    }
+  ]
+}
+</code></pre>
+<ul>
+<li><code>box</code> está normalizado a <code>[0,1]</code> respecto del frame (640×480).</li>
+<li><code>score</code> está redondeado a 3 decimales; <code>box</code> a 4.</li>
+<li><code>name</code>, <code>short_name</code> y <code>summary</code> se resuelven desde <code>boards.json</code>; si la
+  etiqueta no tiene ficha, se repite el <code>label</code> y <code>summary</code> queda vacío.</li>
+</ul>
+<h3 id="get-apihealth"><code>GET /api/health</code></h3>
+<pre><code class="language-json">{
+  "status": "ok",
+  "camera": {"present": true, "resolution": [640, 480], "fps": 14.7, "index": 0},
+  "templates": {
+    "count": 12,
+    "labels": ["arduino_nano", "arduino_uno_r3"],
+    "by_label": {"arduino_nano": 4, "arduino_uno_r3": 8, "raspberry_pi_4": 0, "raspberry_pi_5": 0},
+    "loaded": {"arduino_nano": 4, "arduino_uno_r3": 8}
+  },
+  "detector": {"last_inference_ms": 248.3, "inferences": 1532},
+  "uptime_s": 421.7,
+  "version": "1.0.0"
+}
+</code></pre>
+<ul>
+<li><code>templates.by_label</code> incluye las cuatro etiquetas conocidas aunque estén en 0.</li>
+<li><code>templates.labels</code> solo lista las que tienen muestras.</li>
+<li><code>templates.loaded</code> refleja lo que el detector tiene realmente en memoria.</li>
+<li><code>camera.index</code> es el índice configurado (<code>CAMERA_INDEX</code>).</li>
+</ul>
+<h3 id="post-apiteachcapture"><code>POST /api/teach/capture</code></h3>
+<pre><code class="language-json">// request
+{"label": "arduino_uno_r3"}
+
+// 200 OK
+{
+  "ok": true,
+  "message": "Muestra guardada (312 keypoints). Total: 8.",
+  "keypoints": 312,
+  "samples": 8,
+  "file": "arduino_uno_r3/20261113-101502-123-a1b2c3.npz",
+  "loaded": {"arduino_uno_r3": 8}
+}
+</code></pre>
+<p>Errores típicos:</p>
+<table>
+<thead>
+<tr>
+<th>Situación</th>
+<th>Código</th>
+<th><code>message</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Etiqueta inválida</td>
+<td>422</td>
+<td><code>Etiqueta inválida: usá entre 2 y 40 caracteres [a-z0-9_] ...</code></td>
+</tr>
+<tr>
+<td>Cámara no entrega imágenes</td>
+<td>422</td>
+<td><code>La cámara no está entregando imágenes reales...</code></td>
+</tr>
+<tr>
+<td>Menos de 50 keypoints</td>
+<td>422</td>
+<td><code>Pocos puntos característicos (N/50)...</code></td>
+</tr>
+<tr>
+<td>Body ausente/inválido/grande</td>
+<td>400</td>
+<td><code>Falta el header Content-Length</code> / <code>JSON inválido</code> / ...</td>
+</tr>
+</tbody>
+</table>
+<h3 id="post-apiteachreset"><code>POST /api/teach/reset</code></h3>
+<pre><code class="language-json">// request
+{"label": "arduino_uno_r3"}     // o {"label": "__all__"}
+
+// 200 OK
+{"ok": true, "message": "Muestras borradas de 'arduino_uno_r3': 8.", "removed": 8,
+ "loaded": {}}
+</code></pre>
+<h3 id="post-apiteachreload"><code>POST /api/teach/reload</code></h3>
+<pre><code class="language-json">{"ok": true, "counts": {"arduino_uno_r3": 8}, "samples": {"arduino_uno_r3": 8, ...}}
+</code></pre>
+<p>Acepta POST <strong>sin body</strong> y también con <code>{}</code>. Es la extensión del código respecto
+del plan original (junto con <code>/api/teach/samples</code>).</p>
+<hr/>
+<h2 id="rendimiento-y-ajustes">Rendimiento y ajustes</h2>
+<h3 id="valores-esperados">Valores esperados</h3>
+<table>
+<thead>
+<tr>
+<th>Métrica</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Resolución de captura</td>
+<td>640 × 480</td>
+</tr>
+<tr>
+<td>Formato</td>
+<td>MJPG (V4L2)</td>
+</tr>
+<tr>
+<td>FPS de cámara objetivo</td>
+<td>15</td>
+</tr>
+<tr>
+<td>FPS de stream MJPEG</td>
+<td>hasta 15 (limitado por <code>STREAM_MAX_FPS</code>)</td>
+</tr>
+<tr>
+<td>Calidad JPEG</td>
+<td>85</td>
+</tr>
+<tr>
+<td>Intervalo mínimo entre inferencias</td>
+<td>250 ms (≈4 Hz)</td>
+</tr>
+<tr>
+<td>Inferencia objetivo en ARM64</td>
+<td>200–300 ms</td>
+</tr>
+<tr>
+<td>Ancho de banda aproximado</td>
+<td>1–3 Mbps a 640×480 y ~12 fps</td>
+</tr>
+</tbody>
+</table>
+<p>La inferencia y el stream son independientes: aunque el detector tarde 300 ms,
+el video sigue a 15 fps porque el stream lee <code>last_frame</code> sin esperar al
+detector.</p>
+<h3 id="variables-de-entorno">Variables de entorno</h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Default</th>
+<th>Uso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PORT</code></td>
+<td><code>8000</code></td>
+<td>Puerto HTTP</td>
+</tr>
+<tr>
+<td><code>HOST</code></td>
+<td><code>0.0.0.0</code></td>
+<td>Interfaz de escucha</td>
+</tr>
+<tr>
+<td><code>CAMERA_INDEX</code></td>
+<td><code>0</code></td>
+<td>Índice de <code>/dev/videoN</code></td>
+</tr>
+<tr>
+<td><code>ORB_FEATURES</code></td>
+<td><code>500</code></td>
+<td>Máximo de keypoints ORB</td>
+</tr>
+<tr>
+<td><code>BOARDS_JSON</code></td>
+<td><code>data/boards.json</code></td>
+<td>Ruta alternativa de fichas</td>
+</tr>
+<tr>
+<td><code>TEMPLATE_DIR</code></td>
+<td><code>data/templates</code></td>
+<td>Ruta alternativa de plantillas</td>
+</tr>
+<tr>
+<td><code>LOG_LEVEL</code></td>
+<td><code>INFO</code></td>
+<td><code>DEBUG</code>, <code>INFO</code>, <code>WARNING</code>, <code>ERROR</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="constantes-de-ajuste-appconfigpy">Constantes de ajuste (<code>app/config.py</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Constante</th>
+<th>Default</th>
+<th>Efecto</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DETECTOR_INTERVAL_MS</code></td>
+<td><code>250</code></td>
+<td>Menos → más reactivo y más CPU</td>
+</tr>
+<tr>
+<td><code>ORB_FEATURES</code></td>
+<td><code>500</code></td>
+<td>Menos → más rápido, menos robusto</td>
+</tr>
+<tr>
+<td><code>LOWE_RATIO</code></td>
+<td><code>0.75</code></td>
+<td>Más bajo → matches más estrictos</td>
+</tr>
+<tr>
+<td><code>MIN_MATCH_COUNT</code></td>
+<td><code>10</code></td>
+<td>Mínimo de matches para intentar homografía</td>
+</tr>
+<tr>
+<td><code>MIN_INLIERS</code></td>
+<td><code>15</code></td>
+<td>Mínimo de inliers RANSAC</td>
+</tr>
+<tr>
+<td><code>RANSAC_REPROJ_THRESHOLD</code></td>
+<td><code>5.0</code> px</td>
+<td>Tolerancia de reproyección</td>
+</tr>
+<tr>
+<td><code>SCORE_THRESHOLD</code></td>
+<td><code>0.35</code></td>
+<td>Umbral de publicación</td>
+</tr>
+<tr>
+<td><code>MIN_BOX_AREA_RATIO</code></td>
+<td><code>0.02</code></td>
+<td>Caja mínima (2 % del frame)</td>
+</tr>
+<tr>
+<td><code>MAX_BOX_AREA_RATIO</code></td>
+<td><code>0.90</code></td>
+<td>Caja máxima (90 % del frame)</td>
+</tr>
+<tr>
+<td><code>NMS_IOU_THRESHOLD</code></td>
+<td><code>0.30</code></td>
+<td>Solapamiento para suprimir</td>
+</tr>
+<tr>
+<td><code>INSTANCE_CENTER_DISTANCE_PX</code></td>
+<td><code>40</code></td>
+<td>Agrupación de instancias</td>
+</tr>
+<tr>
+<td><code>MAX_INSTANCES_PER_TEMPLATE</code></td>
+<td><code>4</code></td>
+<td>Tope de copias por plantilla</td>
+</tr>
+<tr>
+<td><code>MIN_POLYGON_FILL_RATIO</code></td>
+<td><code>0.20</code></td>
+<td>Descarte de homografías degeneradas</td>
+</tr>
+<tr>
+<td><code>TEMPLATE_MIN_KEYPOINTS</code></td>
+<td><code>50</code></td>
+<td>Mínimo para aceptar una muestra</td>
+</tr>
+<tr>
+<td><code>JPEG_QUALITY</code></td>
+<td><code>85</code></td>
+<td>Calidad del stream</td>
+</tr>
+<tr>
+<td><code>STREAM_MAX_FPS</code></td>
+<td><code>15</code></td>
+<td>Techo del stream</td>
+</tr>
+<tr>
+<td><code>MAX_JSON_BODY_BYTES</code></td>
+<td><code>65536</code></td>
+<td>Tamaño máximo de body JSON</td>
+</tr>
+</tbody>
+</table>
+<h3 id="si-la-uno-q-va-justa">Si la UNO Q va justa</h3>
+<ol>
+<li>Bajá <code>ORB_FEATURES=350</code>.</li>
+<li>Subí <code>DETECTOR_INTERVAL_MS=350</code> o <code>400</code>.</li>
+<li>Reducí <code>STREAM_MAX_FPS</code> o <code>JPEG_QUALITY</code> si el Wi-Fi es el cuello de botella.</li>
+<li>Enseñá menos muestras por etiqueta (calidad &gt; cantidad) si el arranque tarda
+   en recargar plantillas.</li>
+<li>Evitá más de 4–6 plantillas simultáneas por etiqueta.</li>
+</ol>
+<hr/>
+<h2 id="resolucion-de-problemas">Resolución de problemas</h2>
+<table>
+<thead>
+<tr>
+<th>Síntoma</th>
+<th>Causa probable</th>
+<th>Solución</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Cámara negra o ausente</strong> (banner “No se detecta la cámara”)</td>
+<td><code>/dev/video0</code> no existe, está ocupado o faltan permisos</td>
+<td><code>ls -l /dev/video*</code>; desconectar otros programas; <code>sudo usermod -aG video $USER</code>; revisar <code>CAMERA_INDEX</code></td>
+</tr>
+<tr>
+<td>Frame de estado <code>CAMARA NO DISPONIBLE</code></td>
+<td>La app arrancó sin cámara</td>
+<td>Conectar la webcam; esperar 2 s de reintento; revisar <code>journalctl</code></td>
+</tr>
+<tr>
+<td>Frame de estado <code>CAMARA DESCONECTADA</code></td>
+<td>La cámara dejó de entregar frames</td>
+<td>Revisar cable/hub alimentado; el hilo reintenta cada 2 s</td>
+</tr>
+<tr>
+<td><strong>“Pocos puntos característicos (N/50)”</strong></td>
+<td>Placa pequeña, desenfocada, sin luz o fondo liso</td>
+<td>Acercar, enfocar, iluminar de costado, usar fondo contrastado</td>
+</tr>
+<tr>
+<td><strong>Sin plantillas</strong> (banner azul, no detecta nada)</td>
+<td><code>data/templates/</code> vacío</td>
+<td>Entrenar desde <code>/teach</code>; verificar <code>templates.count</code> en <code>/api/health</code></td>
+</tr>
+<tr>
+<td>La placa está entrenada pero <strong>no se detecta</strong></td>
+<td>Ángulo/luz muy distintos; score &lt; 0.35; caja &lt; 2 % del frame</td>
+<td>Capturar más variaciones; acercar; revisar <code>score</code> e <code>inliers</code> en <code>/api/detections</code></td>
+</tr>
+<tr>
+<td>Detecta <strong>otra placa</strong> como la entrenada</td>
+<td>Plantillas poco discriminativas</td>
+<td>Enseñar el silkscreen y los conectores; evitar fondos repetidos; subir <code>SCORE_THRESHOLD</code></td>
+</tr>
+<tr>
+<td>Se detecta y <strong>desaparece</strong> al mover</td>
+<td>ORB no es invariante a cambios extremos de escala</td>
+<td>Mantener distancia moderada (20–60 cm); agregar muestras a otras distancias</td>
+</tr>
+<tr>
+<td><strong>Globos desalineados</strong></td>
+<td>El canvas todavía no sincronizó con el <code>&lt;img&gt;</code></td>
+<td>Esperar el primer frame; redimensionar la ventana fuerza el <code>ResizeObserver</code></td>
+</tr>
+<tr>
+<td><strong>Puerto 8000 ocupado</strong></td>
+<td>Otro servicio en la placa o notebook</td>
+<td><code>PORT=8010 ./scripts/run_local.sh</code>; en systemd, cambiar <code>Environment=PORT=</code> y reiniciar</td>
+</tr>
+<tr>
+<td><strong>SSH no disponible</strong> (host vivo, cero puertos)</td>
+<td>UNO Q con SSH deshabilitado</td>
+<td><code>./scripts/deploy.sh --via-adb</code> o habilitar SSH desde App Lab (<code>sudo systemctl enable --now ssh</code>)</td>
+</tr>
+<tr>
+<td><code>deploy.sh</code> termina con código 3</td>
+<td><code>sudo</code> pide contraseña</td>
+<td>Ejecutar los comandos impresos a mano y repetir con <code>--skip-apt</code></td>
+</tr>
+<tr>
+<td><code>deploy.sh</code> termina con código 5</td>
+<td>El servicio no respondió</td>
+<td><code>systemctl status detector-tarjetas</code>; <code>journalctl -u detector-tarjetas -n 50</code></td>
+</tr>
+<tr>
+<td><strong>Servicio systemd</strong> reinicia en bucle</td>
+<td>Falta <code>python3-opencv</code>, ruta incorrecta o cámara sin permisos</td>
+<td><code>journalctl</code>; <code>python3 -c "import cv2"</code>; revisar <code>User=</code>, <code>WorkingDirectory=</code> y <code>SupplementaryGroups=video</code></td>
+</tr>
+<tr>
+<td><code>templates.loaded</code> no coincide con <code>by_label</code></td>
+<td>Plantillas corruptas o recarga pendiente</td>
+<td><code>POST /api/teach/reload</code>; revisar warnings del log (<code>Plantilla inválida ...</code>)</td>
+</tr>
+<tr>
+<td>El stream se corta al cambiar de red</td>
+<td>El navegador perdió la conexión TCP</td>
+<td>El cliente reconecta solo a los 1.5 s con <em>cache-buster</em></td>
+</tr>
+<tr>
+<td><code>/api/boards</code> devuelve 500</td>
+<td><code>boards.json</code> inválido o campo faltante</td>
+<td>Leer el mensaje de error (incluye archivo, línea y campo); corregir el JSON</td>
+</tr>
+<tr>
+<td><code>POST /api/teach/capture</code> devuelve 400</td>
+<td>Falta <code>Content-Length</code> o el JSON está malformado</td>
+<td>Enviar <code>Content-Type: application/json</code> y un objeto válido</td>
+</tr>
+</tbody>
+</table>
+<h3 id="diagnostico-rapido">Diagnóstico rápido</h3>
+<pre><code class="language-bash"># ¿Está el proceso?
+ps aux | grep "app.server"
+
+# ¿Qué dice el servicio?
+sudo systemctl status detector-tarjetas
+sudo journalctl -u detector-tarjetas -n 100 --no-pager
+
+# ¿La cámara existe y quién la usa?
+ls -l /dev/video*
+sudo fuser -v /dev/video0
+
+# ¿Qué ve OpenCV?
+python3 -c "import cv2; c=cv2.VideoCapture(0); print(c.isOpened()); print(c.read()[0]); c.release()"
+
+# ¿La API responde?
+curl -s http://127.0.0.1:8000/api/health | python3 -m json.tool
+</code></pre>
+<hr/>
+<h2 id="seguridad-y-advertencias">Seguridad y advertencias</h2>
+<blockquote>
+<p>⚠️ <strong>Esta aplicación está pensada para una LAN de confianza.</strong> No tiene
+autenticación, no usa TLS, no distingue usuarios y permite que cualquiera que
+llegue al puerto 8000 lea el video, consulte las fichas, capture muestras o
+<strong>borre las plantillas</strong>.</p>
+</blockquote>
+<ul>
+<li><strong>No la expongas a internet.</strong> Si necesitás acceso remoto, usá una VPN o un
+  proxy con autenticación y TLS por delante.</li>
+<li><strong>CORS <code>*</code></strong> está habilitado para facilitar pruebas; no lo cambies a un origen
+  público sin analizar el impacto.</li>
+<li><strong>El stream muestra la cámara en vivo</strong>: apuntala solo a lo que querés mostrar.</li>
+<li><strong>Permisos de cámara</strong>: el usuario del servicio debe pertenecer al grupo
+  <code>video</code> (<code>SupplementaryGroups=video</code> en systemd). No ejecutes el servidor como
+  <code>root</code> para “resolver” permisos.</li>
+<li><strong>No se descargan modelos ni datasets</strong>: cualquier propuesta de “mejorar” la
+  detección bajando pesos externos rompe la premisa del proyecto y la operación
+  sin internet.</li>
+<li><strong>Respaldá <code>data/templates/</code> y <code>data/boards.json</code></strong> antes de reinstalar el
+  sistema o mover la placa. Las plantillas son el “modelo” del sistema: sin
+  ellas, la app arranca pero no reconoce nada.</li>
+<li><strong>Las muestras son imágenes del entorno</strong>: pueden contener información
+  sensible del fondo. Tratalas como datos privados.</li>
+<li><strong>No modifiques la configuración de routers</strong> para “hacer andar” el
+  despliegue. El descubrimiento es no invasivo a propósito.</li>
+<li><strong><code>deploy.sh</code> usa <code>sshpass</code> solo si se lo pasás explícitamente</strong>; la
+  contraseña no se guarda en el repositorio. Preferí claves SSH.</li>
+<li><strong>Los scripts validan y escapan</strong> los parámetros que interpolan en comandos
+  remotos. No los edites para aceptar valores arbitrarios.</li>
+</ul>
+<hr/>
+<h2 id="estado-actual-verificado">Estado actual verificado</h2>
+<table>
+<thead>
+<tr>
+<th>Ítem</th>
+<th>Estado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Código fuente</td>
+<td>Completo (<code>app/</code>, <code>web/</code>, <code>scripts/</code>, <code>systemd/</code>, <code>tests/</code>)</td>
+</tr>
+<tr>
+<td>Auditoría estática</td>
+<td><strong>APROBADA — 0 incidencias abiertas</strong></td>
+</tr>
+<tr>
+<td>Incidencias del ciclo 1</td>
+<td>4/4 resueltas (label NPZ, frame sintético, body de reload, inyección en deploy)</td>
+</tr>
+<tr>
+<td>Tests</td>
+<td><strong>41 passed</strong> en el notebook (5.32 s)</td>
+</tr>
+<tr>
+<td>Arranque local</td>
+<td>Verificado con <code>scripts/run_local.sh</code></td>
+</tr>
+<tr>
+<td>Modo enseñar</td>
+<td>Implementado y cubierto por tests de API</td>
+</tr>
+<tr>
+<td>Despliegue en la UNO Q</td>
+<td><strong>Pendiente</strong>: al momento del desarrollo la placa no era accesible por red ni por ADB</td>
+</tr>
+<tr>
+<td>Candidato de red</td>
+<td><code>192.168.1.4</code> (MAC <code>2a:71:1b:c4:cd:e7</code>): responde ping/ARP pero <strong>sin ningún puerto TCP abierto</strong></td>
+</tr>
+<tr>
+<td>SSH / mDNS</td>
+<td>No detectados en la LAN; <code>avahi</code> no instalado</td>
+</tr>
+<tr>
+<td>Próximo paso</td>
+<td>Conectar por USB-C y usar <code>--via-adb</code> o habilitar SSH desde App Lab</td>
+</tr>
+</tbody>
+</table>
+<p>La red observada durante el desarrollo (documentada solo como referencia, <strong>sin
+modificarla</strong>): notebook <code>192.168.1.10/24</code> por Wi-Fi, gateway <code>192.168.1.254</code>,
+router <code>192.168.1.3</code> con 80/443 (probable Teltonika), candidato UNO Q
+<code>192.168.1.4</code> sin puertos abiertos y <code>192.168.1.5</code> (Samsung). Las subredes
+típicas de Teltonika (<code>192.168.2.1</code>, <code>192.168.0.1</code>, <code>10.0.0.1</code>, <code>192.168.88.1</code>)
+no eran alcanzables.</p>
+<hr/>
+<h2 id="estructura-del-repositorio">Estructura del repositorio</h2>
+<pre><code>detector-tarjetas/
+├── app/
+│   ├── __init__.py          versión y docstring del paquete
+│   ├── config.py            constantes, rutas y variables de entorno
+│   ├── camera.py            hilo V4L2, reconexión, frame de estado
+│   ├── detector.py          ORB, matching, homografía, NMS, clustering, NPZ
+│   ├── teach.py             captura/borrado de muestras
+│   ├── specs.py             carga y validación de boards.json
+│   └── server.py            HTTP, rutas, stream MJPEG, señales, main()
+├── web/
+│   ├── index.html           página del detector
+│   ├── teach.html           página del modo enseñar
+│   └── static/
+│       ├── app.js           polling, canvas, globos, panel lateral
+│       ├── teach.js         captura, recarga, borrado, conteos
+│       └── style.css        tema cómic oscuro, sin CDNs
+├── data/
+│   ├── boards.json          fichas técnicas (fuente de verdad de la UI)
+│   └── templates/           plantillas ORB .npz (runtime; solo .gitkeep)
+├── scripts/
+│   ├── discover_unoq.sh     descubrimiento no invasivo en la LAN
+│   ├── deploy.sh            despliegue SSH/scp + systemd (+ fallback ADB)
+│   └── run_local.sh         arranque local con venv
+├── systemd/
+│   └── detector-tarjetas.service
+├── tests/
+│   ├── helpers.py           texturas sintéticas, FakeCamera, utilidades
+│   ├── test_specs.py        carga/validación de boards.json
+│   ├── test_detector.py     detección, instancias, NPZ, IoU
+│   └── test_api.py          endpoints, stream, teach, health
+├── docs/
+│   ├── datasheet.md         manual de usuario
+│   ├── developer.md         documentación técnica del código
+│   └── BITACORA.md          bitácora de desarrollo
+├── conftest.py              raíz del proyecto en sys.path para pytest
+├── requirements-dev.txt     opencv-python-headless, pytest, requests
+├── .gitignore
+└── README.md
+</code></pre>
+<hr/>
+<h2 id="ficha-de-evaluacion">Ficha de evaluación</h2>
+<p><strong>Madurez global: 4.0/5</strong></p>
+<table>
+<thead>
+<tr>
+<th>Criterio</th>
+<th style="text-align: right;">Nota</th>
+<th>Evidencia</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Madurez</td>
+<td style="text-align: right;">3/5</td>
+<td>41 tests en 5,32 s, auditoría aprobada con 0 incidencias y modo enseñar cubierto por tests. El despliegue en la UNO Q quedó pendiente y la inferencia ARM64 solo está estimada en 200–300 ms.</td>
+</tr>
+<tr>
+<td>Reproducibilidad</td>
+<td style="text-align: right;">4/5</td>
+<td>run_local.sh crea el venv, instala dependencias y levanta el servidor; FakeCamera permite 41 tests sin cámara. No hay prueba de integración con video ni con la placa.</td>
+</tr>
+<tr>
+<td>Documentación</td>
+<td style="text-align: right;">4/5</td>
+<td>README extenso, bitácora con once problemas, datasheet y developer. La sección de estado actual declara el despliegue pendiente y la red observada sin modificarla.</td>
+</tr>
+<tr>
+<td>Honestidad de límites</td>
+<td style="text-align: right;">5/5</td>
+<td>Dice explícitamente que no es un clasificador genérico, que no hace OCR, que requiere entrenamiento y que el despliegue físico no se completó.</td>
+</tr>
+<tr>
+<td>Valor demostrativo</td>
+<td style="text-align: right;">4/5</td>
+<td>Implementa detección multinstancia con ORB y RANSAC, score con tres señales y UI de enseñanza en caliente, sin modelos externos ni GPU.</td>
+</tr>
+<tr>
+<td>Facilidad de despliegue</td>
+<td style="text-align: right;">4/5</td>
+<td>deploy.sh cubre SSH, tar y systemd, con fallback ADB y códigos de salida claros. Requiere acceso a la placa, que en esta versión no estuvo disponible.</td>
+</tr>
+</tbody>
+</table>
+<p>Sirve para aprender detección por plantillas y para desplegar un reconocedor de cuatro placas en una LAN de confianza. La limitación que más pesa es que solo reconoce lo que se le enseña y que, en su versión inicial, el funcionamiento real en la UNO Q no llegó a verificarse.</p>
+<h2 id="lo-que-no-funciono">Lo que no funcionó</h2>
+<h3 id="v100-despliegue-placa-inalcanzable-por-red">v1.0.0 · despliegue — Placa inalcanzable por red</h3>
+<p>La UNO Q respondía ping y ARP en 192.168.1.4 pero no tenía ningún puerto TCP abierto, así que el despliegue quedó pendiente. Se documentaron tres vías: habilitar SSH desde App Lab, usar ADB por USB-C o copiar el proyecto a mano.</p>
+<h3 id="v100-serializacion-npz-etiquetas-con-comillas">v1.0.0 · serialización NPZ — Etiquetas con comillas</h3>
+<p>str() sobre un array Unicode 0-d devolvía «'arduino_uno_r3'», rompiendo el cruce con boards.json y los globos. Se agregó normalize_label() con .item(), decodificación UTF-8 y limpieza de comillas.</p>
+<h3 id="v100-modo-ensenar-muestras-del-frame-sintetico">v1.0.0 · modo enseñar — Muestras del frame sintético</h3>
+<p>Sin cámara, el modo enseñar aceptaba el cartel «CAMARA NO DISPONIBLE» como muestra y contaminaba las plantillas. Ahora el servidor exige camera.is_open y responde 422 sin escribir archivo.</p>
+<h3 id="v100-multinstancia-dos-placas-iguales-una-detectada">v1.0.0 · multinstancia — Dos placas iguales, una detectada</h3>
+<p>Con dos UNO R3 en cuadro, el ratio test descartaba la segunda porque los descriptores de la primera seguían presentes. Se repite el matching hasta cuatro veces y se eliminan del frame los keypoints dentro de la caja ya aceptada.</p>
+<h2 id="preguntas-tipicas">Preguntas típicas</h2>
+<p><strong>¿Qué es Detector de tarjetas?</strong></p>
+<p>Es una aplicación web que reconoce placas Arduino y Raspberry Pi con ORB y homografía RANSAC, y muestra la ficha técnica en un globo cómic sobre el video. Corre en el lado Linux de la UNO Q o en un notebook con webcam.</p>
+<p><strong>¿Qué no hace?</strong></p>
+<p>No es un clasificador genérico ni hace OCR de marcas o números de serie: solo detecta las etiquetas enseñadas desde /teach. Tampoco funciona sin plantillas y no tiene autenticación ni TLS.</p>
+<p><strong>¿Cómo se ejecuta o despliega?</strong></p>
+<p>En local se usa scripts/run_local.sh y se abre el puerto 8000; en la placa se usa scripts/deploy.sh con SSH o la variante --via-adb. El servicio systemd queda habilitado con la unidad incluida.</p>
+<p><strong>¿Qué se puede reutilizar?</strong></p>
+<p>El pipeline ORB con ratio test, homografía y validación geométrica es reutilizable para cualquier objeto texturado. También sirven el modo enseñar con recarga en caliente, las cajas normalizadas y la inyección de una cámara falsa para tests.</p>
+<h2 id="licencia-y-uso">Licencia y uso</h2>
+<p>Proyecto <strong>educativo y demostrativo</strong>. No se incluye un archivo <code>LICENSE</code>
+explícito: si vas a redistribuirlo, agregá la licencia que corresponda a tu
+contexto.</p>
+<ul>
+<li><strong>OpenCV</strong> es © sus autores y se distribuye bajo <strong>Apache License 2.0</strong>.</li>
+<li><strong>Arduino</strong> y <strong>Arduino UNO</strong> son marcas de Arduino S.r.l.</li>
+<li><strong>Raspberry Pi</strong> es una marca de Raspberry Pi Ltd.</li>
+<li>Las fichas técnicas son datos públicos de Arduino y Raspberry Pi Foundation;
+  las marcas y nombres pertenecen a sus dueños.</li>
+<li>Las plantillas ORB que generes con <code>/teach</code> son tuyas: respaldalas y tratalas
+  como datos privados.</li>
+</ul>
+<hr/>
+<p align="center">
+<strong>Hecho con OpenCV, sin modelos externos y sin salir de la LAN.</strong><br/>
+  ORB + RANSAC · 100 % local · 41 tests
+</p></div></div></section><section class="section tight"><div class="wrap"><div class="section-head"><div class="kicker">Tropiezos</div><h2>Los tropiezos, documentados</h2><p class="section-sub">Lo que no funcionó en las primeras versiones, con la corrección aplicada.</p></div><div class="fail-grid"><div class="fail"><div class="v">v1.0.0 · despliegue</div><h3>Placa inalcanzable por red</h3><p>La UNO Q respondía ping y ARP en 192.168.1.4 pero no tenía ningún puerto TCP abierto, así que el despliegue quedó pendiente. Se documentaron tres vías: habilitar SSH desde App Lab, usar ADB por USB-C o copiar el proyecto a mano.</p></div><div class="fail"><div class="v">v1.0.0 · serialización NPZ</div><h3>Etiquetas con comillas</h3><p>str() sobre un array Unicode 0-d devolvía «'arduino_uno_r3'», rompiendo el cruce con boards.json y los globos. Se agregó normalize_label() con .item(), decodificación UTF-8 y limpieza de comillas.</p></div><div class="fail"><div class="v">v1.0.0 · modo enseñar</div><h3>Muestras del frame sintético</h3><p>Sin cámara, el modo enseñar aceptaba el cartel «CAMARA NO DISPONIBLE» como muestra y contaminaba las plantillas. Ahora el servidor exige camera.is_open y responde 422 sin escribir archivo.</p></div><div class="fail"><div class="v">v1.0.0 · multinstancia</div><h3>Dos placas iguales, una detectada</h3><p>Con dos UNO R3 en cuadro, el ratio test descartaba la segunda porque los descriptores de la primera seguían presentes. Se repite el matching hasta cuatro veces y se eliminan del frame los keypoints dentro de la caja ya aceptada.</p></div></div></div></section><section class="section tight"><div class="wrap"><div class="section-head"><div class="kicker">Evaluación</div><h2>Cómo se mide este proyecto</h2><p class="section-sub">Seis criterios fijos, con la evidencia que respalda cada nota.</p></div><div class="rating-head"><div class="rating-avg">4.0<small>/5</small></div><p>Sirve para aprender detección por plantillas y para desplegar un reconocedor de cuatro placas en una LAN de confianza. La limitación que más pesa es que solo reconoce lo que se le enseña y que, en su versión inicial, el funcionamiento real en la UNO Q no llegó a verificarse.</p></div><div class="rating"><div class="rating-row"><div class="rating-name">Madurez</div><div class="rating-bar"><span style="width:60%"></span></div><div class="rating-score">3/5</div><div class="rating-note">41 tests en 5,32 s, auditoría aprobada con 0 incidencias y modo enseñar cubierto por tests. El despliegue en la UNO Q quedó pendiente y la inferencia ARM64 solo está estimada en 200–300 ms.</div></div><div class="rating-row"><div class="rating-name">Reproducibilidad</div><div class="rating-bar"><span style="width:80%"></span></div><div class="rating-score">4/5</div><div class="rating-note">run_local.sh crea el venv, instala dependencias y levanta el servidor; FakeCamera permite 41 tests sin cámara. No hay prueba de integración con video ni con la placa.</div></div><div class="rating-row"><div class="rating-name">Documentación</div><div class="rating-bar"><span style="width:80%"></span></div><div class="rating-score">4/5</div><div class="rating-note">README extenso, bitácora con once problemas, datasheet y developer. La sección de estado actual declara el despliegue pendiente y la red observada sin modificarla.</div></div><div class="rating-row"><div class="rating-name">Honestidad de límites</div><div class="rating-bar"><span style="width:100%"></span></div><div class="rating-score">5/5</div><div class="rating-note">Dice explícitamente que no es un clasificador genérico, que no hace OCR, que requiere entrenamiento y que el despliegue físico no se completó.</div></div><div class="rating-row"><div class="rating-name">Valor demostrativo</div><div class="rating-bar"><span style="width:80%"></span></div><div class="rating-score">4/5</div><div class="rating-note">Implementa detección multinstancia con ORB y RANSAC, score con tres señales y UI de enseñanza en caliente, sin modelos externos ni GPU.</div></div><div class="rating-row"><div class="rating-name">Facilidad de despliegue</div><div class="rating-bar"><span style="width:80%"></span></div><div class="rating-score">4/5</div><div class="rating-note">deploy.sh cubre SSH, tar y systemd, con fallback ADB y códigos de salida claros. Requiere acceso a la placa, que en esta versión no estuvo disponible.</div></div></div></div></section><section class="section tight"><div class="wrap"><div class="section-head"><div class="kicker">Preguntas</div><h2>Lo que suelen preguntar</h2></div><div class="faq"><details><summary>¿Qué es Detector de tarjetas?</summary><p>Es una aplicación web que reconoce placas Arduino y Raspberry Pi con ORB y homografía RANSAC, y muestra la ficha técnica en un globo cómic sobre el video. Corre en el lado Linux de la UNO Q o en un notebook con webcam.</p></details><details><summary>¿Qué no hace?</summary><p>No es un clasificador genérico ni hace OCR de marcas o números de serie: solo detecta las etiquetas enseñadas desde /teach. Tampoco funciona sin plantillas y no tiene autenticación ni TLS.</p></details><details><summary>¿Cómo se ejecuta o despliega?</summary><p>En local se usa scripts/run_local.sh y se abre el puerto 8000; en la placa se usa scripts/deploy.sh con SSH o la variante --via-adb. El servicio systemd queda habilitado con la unidad incluida.</p></details><details><summary>¿Qué se puede reutilizar?</summary><p>El pipeline ORB con ratio test, homografía y validación geométrica es reutilizable para cualquier objeto texturado. También sirven el modo enseñar con recarga en caliente, las cajas normalizadas y la inyección de una cámara falsa para tests.</p></details></div></div></section></div><section class="cta">
+<div class="wrap">
+<div class="cta-card reveal">
+<div class="kicker" style="justify-content:center">Portfolio · Arduino UNO Q</div>
+<h2>¿Construimos algo así?</h2>
+<p>Si te sirve o quieres construir algo parecido, el código está abierto.</p>
+<div class="hero-actions">
+<a class="btn btn-primary" href="https://wanderc137.github.io/" rel="noopener" target="_blank">Ver todos los proyectos <svg viewbox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+<a class="btn btn-ghost" href="https://github.com/wanderc137/detector-tarjetas" rel="noopener" target="_blank">Explorar el código</a>
+</div>
+</div>
+</div>
+</section>
+</main>
+<footer>
+<div class="wrap">
+<div class="foot-grid">
+<div>
+<div class="foot-brand"><span class="brand-mark"><svg viewbox="0 0 24 24"><rect height="14" rx="3" width="14" x="5" y="5"></rect><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"></path><circle cx="12" cy="12" r="2.5"></circle></svg></span>Pasillo Seguro</div>
+<p class="foot-p">Pasillo Seguro: asistente visual de colisión, documentación y límites reales en un solo lugar.</p>
+</div>
+<div>
+<h4>Este proyecto</h4>
+<div class="foot-links">
+<a href="https://github.com/wanderc137/detector-tarjetas" rel="noopener" target="_blank">Repositorio en GitHub</a>
+<a href="https://github.com/wanderc137/detector-tarjetas/blob/main/README.md" rel="noopener" target="_blank">README técnico</a>
+<a href="https://github.com/wanderc137/detector-tarjetas/blob/main/docs/datasheet.md" rel="noopener" target="_blank">Datasheet</a>
+<a href="https://github.com/wanderc137/detector-tarjetas/blob/main/docs/developer.md" rel="noopener" target="_blank">Guía de desarrollador</a>
+<a href="https://github.com/wanderc137/detector-tarjetas/blob/main/docs/servicio.md" rel="noopener" target="_blank">Runbook de la placa</a>
+</div>
+</div>
+<div>
+<h4>Otros proyectos</h4>
+<div class="foot-links"><a href="https://wanderc137.github.io/vending-solana-unoq/">Vending Solana</a><a href="https://wanderc137.github.io/UnoQ/">Dos cerebros, un pin</a><a href="https://wanderc137.github.io/JarvisCAN/">JarvisCAN</a><a href="https://wanderc137.github.io/JarvisUNOQ/">JarvisUNOQ</a><a href="https://wanderc137.github.io/AnalizadorRostroUNOQ-v2/">Analizador de Rostro</a><a href="https://wanderc137.github.io/GestureCubeUNOQ/">GestureCube</a><a href="https://wanderc137.github.io/AnalizadorRostroUNOQ/">AnalizadorRostro v1</a><a href="https://wanderc137.github.io/superfoto-unoq/">SuperFoto</a><a href="https://wanderc137.github.io/detector-tarjetas/">Detector de tarjetas</a><a href="https://wanderc137.github.io/netEspNow-v1.4/">netEspNow</a><a href="https://wanderc137.github.io/nb2700-telemetria/">NB2700 Telemetría</a><a href="https://wanderc137.github.io/CubeCell-LoRaWAN-Node-v1.3/">CubeCell Bridge</a><a href="https://wanderc137.github.io/BusAccel-8266-v4/">BusAccel</a><a href="https://wanderc137.github.io/valvulas-zigbee/">Válvulas Zigbee</a><a href="https://wanderc137.github.io/TotemAutoatencion/">Totem Autoatención</a><a href="https://wanderc137.github.io/CashDroController/">CashDro Controller</a><a href="https://wanderc137.github.io/proxy-openrouter-ia-chinas/">OpenRouter Proxy</a><a href="https://wanderc137.github.io/mega-free-chat/">Mega Free Chat</a><a href="https://wanderc137.github.io/SpeechToTextAuxPy/">SpeechToText Aux</a><a href="https://wanderc137.github.io/teleAsistenciaV1.3/">Alerta Mayor</a><a href="https://wanderc137.github.io/turnero/">Turnero</a><a href="https://wanderc137.github.io/mesacerca/">MesaCerca</a><a href="https://wanderc137.github.io/permaweb-app/">Permaweb App</a></div>
+</div>
+</div>
+<div class="foot-bottom">
+<span><a href="https://wanderc137.github.io/">Portfolio</a> · © 2026 wanderc137 · Licencia MIT</span>
+<span>Diseñado y construido por wanderc137</span>
+</div>
+</div>
+</footer>
+<script>
+(function(){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in');
+        io.unobserve(entry.target);
+      }
+    });
+  }, {threshold: 0.12});
+  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+})();
+</script>
+</body>
+</html>

@@ -1164,6 +1164,57 @@ detector-tarjetas/
 
 ---
 
+## Ficha de evaluación
+
+**Madurez global: 4.0/5**
+
+| Criterio | Nota | Evidencia |
+|---|---:|---|
+| Madurez | 3/5 | 41 tests en 5,32 s, auditoría aprobada con 0 incidencias y modo enseñar cubierto por tests. El despliegue en la UNO Q quedó pendiente y la inferencia ARM64 solo está estimada en 200–300 ms. |
+| Reproducibilidad | 4/5 | run_local.sh crea el venv, instala dependencias y levanta el servidor; FakeCamera permite 41 tests sin cámara. No hay prueba de integración con video ni con la placa. |
+| Documentación | 4/5 | README extenso, bitácora con once problemas, datasheet y developer. La sección de estado actual declara el despliegue pendiente y la red observada sin modificarla. |
+| Honestidad de límites | 5/5 | Dice explícitamente que no es un clasificador genérico, que no hace OCR, que requiere entrenamiento y que el despliegue físico no se completó. |
+| Valor demostrativo | 4/5 | Implementa detección multinstancia con ORB y RANSAC, score con tres señales y UI de enseñanza en caliente, sin modelos externos ni GPU. |
+| Facilidad de despliegue | 4/5 | deploy.sh cubre SSH, tar y systemd, con fallback ADB y códigos de salida claros. Requiere acceso a la placa, que en esta versión no estuvo disponible. |
+
+Sirve para aprender detección por plantillas y para desplegar un reconocedor de cuatro placas en una LAN de confianza. La limitación que más pesa es que solo reconoce lo que se le enseña y que, en su versión inicial, el funcionamiento real en la UNO Q no llegó a verificarse.
+
+## Lo que no funcionó
+
+### v1.0.0 · despliegue — Placa inalcanzable por red
+
+La UNO Q respondía ping y ARP en 192.168.1.4 pero no tenía ningún puerto TCP abierto, así que el despliegue quedó pendiente. Se documentaron tres vías: habilitar SSH desde App Lab, usar ADB por USB-C o copiar el proyecto a mano.
+
+### v1.0.0 · serialización NPZ — Etiquetas con comillas
+
+str() sobre un array Unicode 0-d devolvía «'arduino_uno_r3'», rompiendo el cruce con boards.json y los globos. Se agregó normalize_label() con .item(), decodificación UTF-8 y limpieza de comillas.
+
+### v1.0.0 · modo enseñar — Muestras del frame sintético
+
+Sin cámara, el modo enseñar aceptaba el cartel «CAMARA NO DISPONIBLE» como muestra y contaminaba las plantillas. Ahora el servidor exige camera.is_open y responde 422 sin escribir archivo.
+
+### v1.0.0 · multinstancia — Dos placas iguales, una detectada
+
+Con dos UNO R3 en cuadro, el ratio test descartaba la segunda porque los descriptores de la primera seguían presentes. Se repite el matching hasta cuatro veces y se eliminan del frame los keypoints dentro de la caja ya aceptada.
+
+## Preguntas típicas
+
+**¿Qué es Detector de tarjetas?**
+
+Es una aplicación web que reconoce placas Arduino y Raspberry Pi con ORB y homografía RANSAC, y muestra la ficha técnica en un globo cómic sobre el video. Corre en el lado Linux de la UNO Q o en un notebook con webcam.
+
+**¿Qué no hace?**
+
+No es un clasificador genérico ni hace OCR de marcas o números de serie: solo detecta las etiquetas enseñadas desde /teach. Tampoco funciona sin plantillas y no tiene autenticación ni TLS.
+
+**¿Cómo se ejecuta o despliega?**
+
+En local se usa scripts/run_local.sh y se abre el puerto 8000; en la placa se usa scripts/deploy.sh con SSH o la variante --via-adb. El servicio systemd queda habilitado con la unidad incluida.
+
+**¿Qué se puede reutilizar?**
+
+El pipeline ORB con ratio test, homografía y validación geométrica es reutilizable para cualquier objeto texturado. También sirven el modo enseñar con recarga en caliente, las cajas normalizadas y la inyección de una cámara falsa para tests.
+
 ## Licencia y uso
 
 Proyecto **educativo y demostrativo**. No se incluye un archivo `LICENSE`
