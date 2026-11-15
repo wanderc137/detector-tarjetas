@@ -12,8 +12,8 @@ Corre en el **lado Linux de una Arduino UNO Q** (Debian ARM64) y también en un
 captura, la inferencia y el servidor viven en la placa.
 
 > **Versión:** 1.0.0 · **Estado:** código auditado y aprobado · **Tests:** 41/41
-> pasando en el notebook · **Despliegue en UNO Q:** pendiente (ver
-> [Estado actual verificado](#estado-actual-verificado)).
+> pasando en el notebook. **Despliegue en UNO Q:** realizado (systemd + cámara IP,
+> ver [Despliegue en la UNO Q](DESPLIEGUE_UNOQ.md) y [Estado actual](docs/ESTADO_ACTUAL.md)).
 
 ---
 
@@ -1105,7 +1105,7 @@ curl -s http://127.0.0.1:8000/api/health | python3 -m json.tool
 | Tests | **41 passed** en el notebook (5.32 s) |
 | Arranque local | Verificado con `scripts/run_local.sh` |
 | Modo enseñar | Implementado y cubierto por tests de API |
-| Despliegue en la UNO Q | **Pendiente**: al momento del desarrollo la placa no era accesible por red ni por ADB |
+| Despliegue en la UNO Q | **Realizado**: systemd `detector-tarjetas.service`, app en `192.168.1.5:8000` (ver `DESPLIEGUE_UNOQ.md`) |
 | Candidato de red | `192.168.1.4` (MAC `2a:71:1b:c4:cd:e7`): responde ping/ARP pero **sin ningún puerto TCP abierto** |
 | SSH / mDNS | No detectados en la LAN; `avahi` no instalado |
 | Próximo paso | Conectar por USB-C y usar `--via-adb` o habilitar SSH desde App Lab |
@@ -1166,9 +1166,9 @@ detector-tarjetas/
 
 ## Licencia y uso
 
-Proyecto **educativo y demostrativo**. No se incluye un archivo `LICENSE`
-explícito: si vas a redistribuirlo, agregá la licencia que corresponda a tu
-contexto.
+Publicado bajo la **Licencia MIT** (archivo `LICENSE`, © 2026 wanderc137):
+puedes usar, modificar, distribuir y sublicenciar el código, siempre con la
+nota de copyright y de permiso incluidas.
 
 - **OpenCV** es © sus autores y se distribuye bajo **Apache License 2.0**.
 - **Arduino** y **Arduino UNO** son marcas de Arduino S.r.l.

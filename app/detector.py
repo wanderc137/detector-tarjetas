@@ -616,7 +616,20 @@ class BoardDetector(threading.Thread):
 
         kept: list[Detection] = []
         for detection in ordered:
-            if all(box_iou(detection.box, other.box) <= config.NMS_IOU_THRESHOLD for other in kept):
+            redundant = False
+            cx, cy = detection.center
+            for other in kept:
+                if box_iou(detection.box, other.box) > config.NMS_IOU_THRESHOLD:
+                    redundant = True
+                    break
+                # Contención: si el centro de esta caja cae dentro de otra caja
+                # del mismo label, es una instancia fantasma superpuesta.
+                if detection.label == other.label:
+                    ox, oy, ow, oh = other.box
+                    if ox <= cx <= ox + ow and oy <= cy <= oy + oh:
+                        redundant = True
+                        break
+            if not redundant:
                 kept.append(detection)
 
         merged: list[Detection] = []

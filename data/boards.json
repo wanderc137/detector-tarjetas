@@ -113,5 +113,145 @@
     "urls": [
       "https://www.raspberrypi.com/products/raspberry-pi-5/"
     ]
+  },
+  {
+    "id": "esp32",
+    "name": "ESP32 DevKit V1",
+    "short_name": "ESP32",
+    "mcu_soc": "Espressif ESP32-WROOM-32 (Xtensa LX6, 2 núcleos)",
+    "clock_mhz": 240,
+    "ram_mb": 0.52,
+    "flash_storage_gb": 0.004,
+    "gpio_count": 25,
+    "voltage_v": 3.3,
+    "connectivity": [
+      "Wi-Fi 2.4 GHz",
+      "Bluetooth 4.2",
+      "UART",
+      "I2C",
+      "SPI",
+      "ADC"
+    ],
+    "dimensions_mm": [
+      51.5,
+      28.5
+    ],
+    "year": 2016,
+    "description": "Placa de desarrollo basada en el ESP32-WROOM-32 de Espressif: un SoC de dos núcleos Xtensa LX6 a 240 MHz con Wi-Fi 2.4 GHz y Bluetooth 4.2 integrados. Trae 520 KB de SRAM y 4 MB de flash SPI. El DevKit V1 (DOIT) expone ~25 GPIO con UART, I2C, SPI, ADC de 12 bits, DAC, PWM y sensores táctiles capacitivos. Se alimenta por micro-USB a 3.3 V y es la opción habitual para proyectos de IoT con Wi-Fi.",
+    "image_path": null,
+    "urls": [
+      "https://www.espressif.com/en/products/socs/esp32"
+    ]
+  },
+  {
+    "id": "nodemcu",
+    "name": "NodeMCU ESP8266 (ESP-12E)",
+    "short_name": "NodeMCU",
+    "mcu_soc": "Espressif ESP8266EX (Tensilica L106)",
+    "clock_mhz": 80,
+    "ram_mb": 0.08,
+    "flash_storage_gb": 0.004,
+    "gpio_count": 11,
+    "voltage_v": 3.3,
+    "connectivity": [
+      "Wi-Fi 2.4 GHz",
+      "UART",
+      "I2C",
+      "SPI",
+      "ADC"
+    ],
+    "dimensions_mm": [
+      49.0,
+      25.0
+    ],
+    "year": 2014,
+    "description": "Placa de desarrollo con el módulo ESP-12E, que monta el SoC ESP8266EX de Espressif (Tensilica L106 a 80/160 MHz) con Wi-Fi 2.4 GHz integrado. Ofrece unos 80 KB de RAM útil y 4 MB de flash SPI. Incluye conversor USB-serie (CP2102 o CH340), regulador 3.3 V y ~11 GPIO accesibles con UART, I2C, SPI y un ADC de 10 bits. Se alimenta por micro-USB y fue la placa que popularizó el IoT con Wi-Fi de bajo costo.",
+    "image_path": null,
+    "urls": [
+      "https://www.espressif.com/en/products/socs/esp8266"
+    ]
+  },
+  {
+    "id": "raspberry_pi_2",
+    "name": "Raspberry Pi 2 Model B",
+    "short_name": "Raspberry Pi 2",
+    "mcu_soc": "Broadcom BCM2836 (Cortex-A7 32-bit, 4 núcleos)",
+    "clock_mhz": 900,
+    "ram_mb": 1024,
+    "flash_storage_gb": 0,
+    "gpio_count": 40,
+    "voltage_v": 5.0,
+    "connectivity": [
+      "USB 2.0 x4",
+      "Ethernet 10/100",
+      "HDMI",
+      "CSI",
+      "DSI",
+      "Jack 3.5 mm"
+    ],
+    "dimensions_mm": [
+      85.6,
+      56.5
+    ],
+    "year": 2015,
+    "description": "Miniordenador de placa única con SoC Broadcom BCM2836 (4 núcleos Cortex-A7 a 900 MHz) y 1 GB de RAM. A diferencia del Pi 3, NO trae Wi-Fi ni Bluetooth integrados. Cuenta con 4 puertos USB 2.0, Ethernet 10/100, HDMI, conector de cámara (CSI), de pantalla (DSI), jack 3.5 mm y header GPIO de 40 pines. Se alimenta por micro-USB a 5 V y arranca desde microSD. Ideal como mini-servidor o plataforma Linux para proyectos de IoT y visión.",
+    "image_path": null,
+    "urls": [
+      "https://www.raspberrypi.com/products/raspberry-pi-2-model-b/"
+    ]
+  },
+  {
+    "id": "arduino_mega_2560",
+    "name": "Arduino Mega 2560 Rev3",
+    "short_name": "Arduino Mega",
+    "mcu_soc": "ATmega2560 (AVR, 8-bit)",
+    "clock_mhz": 16,
+    "ram_mb": 0.008,
+    "flash_storage_gb": 0.000256,
+    "gpio_count": 54,
+    "voltage_v": 5.0,
+    "connectivity": [
+      "54 GPIO",
+      "16 ADC",
+      "UART x4",
+      "I2C",
+      "SPI"
+    ],
+    "dimensions_mm": [
+      101.5,
+      53.3
+    ],
+    "year": 2010,
+    "description": "Placa con el ATmega2560 (8 bits a 16 MHz), pensada para proyectos que necesitan muchos pines: 54 E/S digitales (15 con PWM), 16 entradas analógicas, 4 UART, I2C y SPI. Tiene 256 KB de flash, 8 KB de SRAM y 4 KB de EEPROM. Es la placa grande de la familia Arduino, ideal para robots, impresoras 3D y control de muchos periféricos.",
+    "image_path": null,
+    "urls": [
+      "https://store.arduino.cc/products/arduino-mega-2560-rev3"
+    ]
+  },
+  {
+    "id": "arduino_ethernet_shield",
+    "name": "Arduino Ethernet Shield (W5100)",
+    "short_name": "Ethernet Shield",
+    "mcu_soc": "Wiznet W5100 (controlador Ethernet)",
+    "clock_mhz": 25,
+    "ram_mb": 0.016,
+    "flash_storage_gb": 0,
+    "gpio_count": 0,
+    "voltage_v": 5.0,
+    "connectivity": [
+      "Ethernet 10/100",
+      "SPI",
+      "MicroSD"
+    ],
+    "dimensions_mm": [
+      69.0,
+      53.3
+    ],
+    "year": 2010,
+    "description": "Shield que agrega conectividad Ethernet a un Arduino Uno/Mega. Monta el chip Wiznet W5100 (Ethernet 10/100) que se comunica por SPI, con conector RJ45 y slot microSD para almacenamiento. Se apila sobre la placa y permite usar la biblioteca Ethernet de Arduino para conectar el proyecto a la red cableada.",
+    "image_path": null,
+    "urls": [
+      "https://store.arduino.cc/products/arduino-ethernet-shield-2"
+    ]
   }
 ]

@@ -8,11 +8,16 @@
   "use strict";
 
   const FONT = '"Comic Sans MS", "Comic Neue", "Chalkboard SE", "Segoe Print", system-ui, sans-serif';
-  const COLOR_BOX = "#00ff3c";
-  const COLOR_INK = "#111111";
-  const COLOR_BUBBLE = "#ffffff";
+  const COLOR_BOX = "#c9a35a";
+  const COLOR_INK = "#191919";
+  const COLOR_BUBBLE = "#f3efe6";
+  const COLOR_BUBBLE_SHADOW = "rgba(201, 163, 90, 0.55)";
   const POLL_DETECTIONS_MS = 250;
   const POLL_HEALTH_MS = 2000;
+  const SMOOTH_WINDOW = 9;  // frames de historia para la mediana (rechaza saltos)
+  const SMOOTH_ALPHA = 0.15; // 0..1: cuánto sigue el globo a la mediana
+  const DEADBAND = 18;      // px: por debajo de esto el globo queda congelado
+  const FLIP_MARGIN = 20;   // px de histéresis para no alternar arriba/abajo
 
   const stream = document.getElementById("stream");
   const canvas = document.getElementById("overlay");
@@ -26,6 +31,9 @@
   const placeholder = document.getElementById("streamPlaceholder");
   const hintMeta = document.getElementById("hint-meta");
   const footerStats = document.getElementById("footer-stats");
+  const cameraUrlInput = document.getElementById("camera-url");
+  const cameraApply = document.getElementById("camera-apply");
+  const cameraStatus = document.getElementById("camera-status");
 
   const state = {
     boards: new Map(),
@@ -34,6 +42,7 @@
     selectedLabel: null,
     health: null,
     dpr: 1,
+    smoothed: new Map(),
   };
 
   // ------------------------------------------------------------------ utils
@@ -51,6 +60,12 @@
     statusPill.textContent = text;
     statusPill.classList.remove("ok", "warn");
     if (variant) statusPill.classList.add(variant);
+  }
+
+  function median(values) {
+    const a = [...values].sort((p, q) => p - q);
+    const mid = a.length >> 1;
+    return a.length % 2 ? a[mid] : (a[mid - 1] + a[mid]) / 2;
   }
 
   function roundRectPath(context, x, y, w, h, r) {
@@ -112,7 +127,7 @@
     ctx.save();
     ctx.lineWidth = selected ? 5 : 3;
     ctx.strokeStyle = COLOR_BOX;
-    ctx.shadowColor = "rgba(0, 255, 60, 0.65)";
+    ctx.shadowColor = COLOR_BUBBLE_SHADOW;
     ctx.shadowBlur = selected ? 16 : 8;
     ctx.strokeRect(x + 1.5, y + 1.5, Math.max(1, w - 3), Math.max(1, h - 3));
 
@@ -138,7 +153,8 @@
     return { x, y, w, h };
   }
 
-  function drawBubble(detection, box, lines, cw, ch, occupied) {
+  function drawBubble(detection, box, lines, cw, ch, occupied, aboveHint) {
+    const GAP = 34; // separación entre el globo y la tarjeta
     const base = Math.max(10, Math.min(16, ch * 0.026));
     const titleSize = base + 1;
     const lineHeight = base * 1.28;
@@ -158,12 +174,15 @@
     const boxCenterX = box.x + box.w / 2;
     const boxCenterY = box.y + box.h / 2;
 
-    let above = box.y - height - 14 >= 4;
+    let above = aboveHint;
+    if (above === undefined || above === null) {
+      above = box.y - height - GAP >= 4;
+    }
     let bubbleX = Math.max(4, Math.min(cw - width - 4, boxCenterX - width / 2));
-    let bubbleY = above ? box.y - height - 14 : box.y + box.h + 14;
+    let bubbleY = above ? box.y - height - GAP : box.y + box.h + GAP;
 
     if (!above && bubbleY + height > ch - 4) {
-      bubbleY = Math.max(4, box.y - height - 14);
+      bubbleY = Math.max(4, box.y - height - GAP);
       above = true;
     }
 
@@ -228,6 +247,57 @@
     return rect;
   }
 
+  function smoothDetection(detection, cw, ch) {
+    const b = detection.box;
+    const raw = { x: b.x * cw, y: b.y * ch, w: b.w * cw, h: b.h * ch };
+    const now = Date.now();
+    let s = state.smoothed.get(detection.label);
+    if (!s) {
+      s = {
+        hist: [raw],
+        x: raw.x, y: raw.y, w: raw.w, h: raw.h,
+        above: raw.y - 120 - 34 >= 4,
+        lastSeen: now,
+      };
+      state.smoothed.set(detection.label, s);
+      return { box: { x: s.x, y: s.y, w: s.w, h: s.h }, above: s.above };
+    }
+    s.lastSeen = now;
+
+    // Historia corta + mediana: la mediana rechaza los saltos aislados del
+    // detector (ORB+RANSAC hace jitter frame a frame incluso con la tarjeta
+    // quieta). Solo se sigue cuando la mediana confirma un movimiento real.
+    s.hist.push(raw);
+    if (s.hist.length > SMOOTH_WINDOW) s.hist.shift();
+    const med = {
+      x: median(s.hist.map((h) => h.x)),
+      y: median(s.hist.map((h) => h.y)),
+      w: median(s.hist.map((h) => h.w)),
+      h: median(s.hist.map((h) => h.h)),
+    };
+
+    // Banda muerta: si el centro de la mediana apenas se movió, congelar.
+    const cx = s.x + s.w / 2;
+    const cy = s.y + s.h / 2;
+    const mx = med.x + med.w / 2;
+    const my = med.y + med.h / 2;
+    if (Math.hypot(mx - cx, my - cy) > DEADBAND) {
+      const a = SMOOTH_ALPHA;
+      s.x += a * (med.x - s.x);
+      s.y += a * (med.y - s.y);
+      s.w += a * (med.w - s.w);
+      s.h += a * (med.h - s.h);
+    }
+
+    // Histéresis arriba/abajo para que el globo no salte.
+    const estH = Math.max(40, Math.min(120, s.h * 0.6));
+    const threshold = estH + 18;
+    if (s.above && s.y < threshold - FLIP_MARGIN) s.above = false;
+    else if (!s.above && s.y > threshold + FLIP_MARGIN) s.above = true;
+
+    return { box: { x: s.x, y: s.y, w: s.w, h: s.h }, above: s.above };
+  }
+
   function draw() {
     if (!canvas.width || !canvas.height) return;
     const dpr = state.dpr || 1;
@@ -241,13 +311,22 @@
     if (!stream.naturalWidth || !state.detections.length) return;
 
     const occupied = [];
+    const seen = new Set();
     state.detections.forEach((detection) => {
       if (!detection.box) return;
-      const box = drawBox(detection, cw, ch);
+      seen.add(detection.label);
+      const { box, above } = smoothDetection(detection, cw, ch);
       const lines = summaryLines(detection);
-      const rect = drawBubble(detection, box, lines, cw, ch, occupied);
+      const rect = drawBubble(detection, box, lines, cw, ch, occupied, above);
       state.bubbles.push({ ...rect, detection });
     });
+    // Podar suavizados de etiquetas que llevan rato sin detectarse.
+    const now = Date.now();
+    for (const [key, s] of state.smoothed.entries()) {
+      if (!seen.has(key) && now - (s.lastSeen || 0) > 1500) {
+        state.smoothed.delete(key);
+      }
+    }
   }
 
   // ----------------------------------------------------------------- panel
@@ -395,6 +474,14 @@
       setPill("sin cámara", "warn");
     }
 
+    // Refleja la fuente actual en el campo de URL (solo si el usuario no está editando).
+    if (cameraUrlInput && document.activeElement !== cameraUrlInput) {
+      const src = camera.index;
+      if (typeof src === "string" && src) {
+        cameraUrlInput.value = src;
+      }
+    }
+
     const inference = health.detector && health.detector.last_inference_ms;
     if (hintMeta) {
       hintMeta.textContent = inference
@@ -435,9 +522,40 @@
     }
   }
 
+  async function applyCameraUrl() {
+    const url = (cameraUrlInput && cameraUrlInput.value ? cameraUrlInput.value : "").trim();
+    if (!url) {
+      if (cameraStatus) cameraStatus.textContent = "Escribí una URL";
+      return;
+    }
+    if (cameraStatus) cameraStatus.textContent = "Aplicando…";
+    try {
+      const response = await fetch("/api/camera", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const data = await response.json();
+      if (response.ok && data.ok) {
+        if (cameraStatus) cameraStatus.textContent = "OK ✓";
+        pollHealth();
+      } else {
+        if (cameraStatus) cameraStatus.textContent = "Error: " + (data.error || `HTTP ${response.status}`);
+      }
+    } catch (error) {
+      if (cameraStatus) cameraStatus.textContent = "Error de red";
+    }
+  }
+
   async function init() {
     syncCanvas();
     await loadBoards();
+    if (cameraApply) cameraApply.addEventListener("click", applyCameraUrl);
+    if (cameraUrlInput) {
+      cameraUrlInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") applyCameraUrl();
+      });
+    }
     pollHealth();
     pollDetections();
   }

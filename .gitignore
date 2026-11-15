@@ -30,6 +30,9 @@ AUDIT_REPORT.md
 data/templates/*
 !data/templates/.gitkeep
 
+# Fotos de seed para entrenamiento (pesadas, no se versionan)
+scripts/seed_images/
+
 # Temporales
 *.tmp
 *.swp

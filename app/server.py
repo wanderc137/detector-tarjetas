@@ -119,8 +119,11 @@ class DetectorTarjetasApp:
         if camera is not None:
             self.camera = camera
         else:
-            index = config.CAMERA_INDEX if camera_index is None else camera_index
-            self.camera = CameraCapture(index=index)
+            if camera_index is not None:
+                source: int | str = camera_index
+            else:
+                source = config.load_camera_source()
+            self.camera = CameraCapture(source=source)
 
         self.detector = BoardDetector(
             frame_queue=self.camera.frame_queue,
@@ -206,7 +209,7 @@ class DetectorTarjetasApp:
                 "present": bool(getattr(self.camera, "is_open", False)),
                 "resolution": list(getattr(self.camera, "resolution", (config.CAMERA_WIDTH, config.CAMERA_HEIGHT))),
                 "fps": float(getattr(self.camera, "fps", 0.0)),
-                "index": getattr(self.camera, "index", config.CAMERA_INDEX),
+                "index": getattr(self.camera, "source", getattr(self.camera, "index", config.CAMERA_INDEX)),
             },
             "templates": {
                 "count": int(sum(counts.values())),
@@ -221,6 +224,20 @@ class DetectorTarjetasApp:
             "uptime_s": round(time.time() - self._started_at, 1),
             "version": __version__,
         }
+
+    def set_camera_source(self, url: str) -> str:
+        """Persiste y aplica una nueva URL de cámara en caliente.
+
+        Args:
+            url: URL del stream (p.ej. ``http://192.168.1.8:8080/video``).
+
+        Returns:
+            La URL normalizada (sin espacios) que quedó aplicada.
+        """
+        url = url.strip()
+        config.CAMERA_URL_FILE.write_text(url + "\n", encoding="utf-8")
+        self.camera.set_source(url)
+        return url
 
     # ------------------------------------------------------------------
     def build_server(self, host: str = config.SERVER_HOST, port: int = config.SERVER_PORT) -> ThreadingHTTPServer:
@@ -373,6 +390,8 @@ def make_handler(app: DetectorTarjetasApp) -> Type[BaseHTTPRequestHandler]:
                     self._handle_reset()
                 elif path == "/api/teach/reload":
                     self._handle_reload()
+                elif path == "/api/camera":
+                    self._handle_set_camera()
                 else:
                     self._send_error_json(HTTPStatus.NOT_FOUND, "Ruta no encontrada", path)
             except (BrokenPipeError, ConnectionResetError):  # pragma: no cover
@@ -449,6 +468,32 @@ def make_handler(app: DetectorTarjetasApp) -> Type[BaseHTTPRequestHandler]:
             counts = self.app.detector.reload_templates()
             self._send_json({"ok": True, "counts": counts, "samples": self.app.teach.counts()})
 
+        def _handle_set_camera(self) -> None:
+            payload = self._read_json_body()
+            if payload is None:
+                return
+            url = payload.get("url", "")
+            if not isinstance(url, str) or not url.strip():
+                self._send_error_json(HTTPStatus.BAD_REQUEST, "Falta el campo 'url'")
+                return
+            url = url.strip()
+            if not (url.startswith("http://") or url.startswith("https://") or url.startswith("rtsp://")):
+                self._send_error_json(
+                    HTTPStatus.BAD_REQUEST,
+                    "La URL debe empezar con http://, https:// o rtsp://",
+                )
+                return
+            try:
+                applied = self.app.set_camera_source(url)
+            except OSError as exc:
+                self._send_error_json(
+                    HTTPStatus.INTERNAL_SERVER_ERROR,
+                    "No se pudo guardar la URL de cámara",
+                    str(exc),
+                )
+                return
+            self._send_json({"ok": True, "source": applied})
+
         # ------------------------------------------------------------------
         # Archivos y stream
         # ------------------------------------------------------------------
@@ -470,7 +515,7 @@ def make_handler(app: DetectorTarjetasApp) -> Type[BaseHTTPRequestHandler]:
                 self._send_error_json(HTTPStatus.NOT_FOUND, "Recurso no encontrado", relative)
                 return
             content_type = MIME_TYPES.get(target.suffix.lower(), "application/octet-stream")
-            self._send_bytes(target.read_bytes(), content_type, cache=True)
+            self._send_bytes(target.read_bytes(), content_type, cache=False)
 
         def _serve_stream(self) -> None:
             self.send_response(HTTPStatus.OK)
