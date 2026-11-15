@@ -40,7 +40,7 @@ class CameraCapture(threading.Thread):
 
     def __init__(
         self,
-        index: int = config.CAMERA_INDEX,
+        source: int | str = config.CAMERA_INDEX,
         width: int = config.CAMERA_WIDTH,
         height: int = config.CAMERA_HEIGHT,
         fps_target: int = config.CAMERA_FPS_TARGET,
@@ -50,7 +50,9 @@ class CameraCapture(threading.Thread):
         """Inicializa el hilo de captura.
 
         Args:
-            index: índice del dispositivo de video (``0`` = ``/dev/video0``).
+            source: fuente de video. Puede ser un ``int`` (índice del dispositivo
+                V4L2, ``0`` = ``/dev/video0``) o un ``str`` (URL de un stream
+                remoto, p.ej. ``http://192.168.1.7:8080/video`` de IP Webcam).
             width: ancho solicitado al driver.
             height: alto solicitado al driver.
             fps_target: FPS solicitados al driver.
@@ -59,7 +61,8 @@ class CameraCapture(threading.Thread):
                 de tamaño ``config.FRAME_QUEUE_SIZE``.
         """
         super().__init__(name="camera-capture", daemon=True)
-        self.index = index
+        self.source = source
+        self.index = source
         self.width = width
         self.height = height
         self.fps_target = fps_target
@@ -124,6 +127,19 @@ class CameraCapture(threading.Thread):
         with self._lock:
             return self._last_frame
 
+    def set_source(self, source: "int | str") -> None:
+        """Cambia la fuente de cámara en caliente y fuerza la reapertura.
+
+        El bucle de captura detectará ``_capture is None`` en la siguiente
+        iteración y reabrirá con la nueva fuente.
+        """
+        with self._lock:
+            self.source = source
+            self.index = source
+            self._open_attempts = 0
+        self._release_capture()
+        LOGGER.info("Fuente de cámara cambiada a %s", source)
+
     def stop(self) -> None:
         """Señala el cierre del hilo y espera su finalización.
 
@@ -145,7 +161,7 @@ class CameraCapture(threading.Thread):
     # ------------------------------------------------------------------
     def run(self) -> None:  # noqa: D401 - docstring heredado de Thread
         """Bucle de captura: abre la cámara, lee frames y reintenta si falla."""
-        LOGGER.info("Hilo de cámara iniciado (device=%s)", self.index)
+        LOGGER.info("Hilo de cámara iniciado (device=%s)", self.source)
         while not self._stop_event.is_set():
             if self._capture is None:
                 self._try_open()
@@ -181,27 +197,32 @@ class CameraCapture(threading.Thread):
             self._open_attempts += 1
             attempt = self._open_attempts
 
-        backends = []
-        if hasattr(cv2, "CAP_V4L2"):
-            backends.append(("V4L2", cv2.CAP_V4L2))
-        backends.append(("default", cv2.CAP_ANY))
+        is_url = isinstance(self.source, str)
+        if is_url:
+            backends: list[tuple[str, int]] = [("FFMPEG", cv2.CAP_FFMPEG)]
+        else:
+            backends = []
+            if hasattr(cv2, "CAP_V4L2"):
+                backends.append(("V4L2", cv2.CAP_V4L2))
+            backends.append(("default", cv2.CAP_ANY))
 
         for name, backend in backends:
             if self._stop_event.is_set():
                 return
-            cap = cv2.VideoCapture(self.index, backend)
+            cap = cv2.VideoCapture(self.source, backend)
             if not cap.isOpened():
                 cap.release()
                 continue
 
-            try:
-                cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
-                cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
-                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
-                cap.set(cv2.CAP_PROP_FPS, self.fps_target)
-                cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-            except cv2.error:  # pragma: no cover - drivers incompletos
-                LOGGER.debug("El driver no aceptó todos los parámetros de captura")
+            if not is_url:
+                try:
+                    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
+                    cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
+                    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
+                    cap.set(cv2.CAP_PROP_FPS, self.fps_target)
+                    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+                except cv2.error:  # pragma: no cover - drivers incompletos
+                    LOGGER.debug("El driver no aceptó todos los parámetros de captura")
 
             ok, frame = cap.read()
             if not ok or frame is None:
@@ -224,7 +245,7 @@ class CameraCapture(threading.Thread):
 
         with self._lock:
             self._is_open = False
-        LOGGER.warning("No se pudo abrir la cámara %s (intento %d)", self.index, attempt)
+        LOGGER.warning("No se pudo abrir la cámara %s (intento %d)", self.source, attempt)
 
     def _release_capture(self) -> None:
         """Libera el ``VideoCapture`` si estaba abierto."""
@@ -273,8 +294,8 @@ class CameraCapture(threading.Thread):
 
         lines = [
             message,
-            f"device {self.index} - reintentando cada {self.retry_delay:.0f}s",
-            "Revisa el cable USB o el indice CAMERA_INDEX",
+            f"device {self.source} - reintentando cada {self.retry_delay:.0f}s",
+            "Revisa el cable USB, la URL o el indice CAMERA_INDEX",
         ]
         font = cv2.FONT_HERSHEY_SIMPLEX
         scale = max(0.5, min(1.0, width / 800.0))

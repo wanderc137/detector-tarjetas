@@ -2,12 +2,13 @@
 (() => {
   "use strict";
 
-  const LABELS = {
+  const FALLBACK_LABELS = {
     arduino_uno_r3: "Arduino UNO R3",
     arduino_nano: "Arduino Nano",
     raspberry_pi_4: "Raspberry Pi 4",
     raspberry_pi_5: "Raspberry Pi 5",
   };
+  let LABELS = { ...FALLBACK_LABELS };
   const POLL_HEALTH_MS = 2500;
 
   const select = document.getElementById("label-select");
@@ -20,6 +21,32 @@
   const statusPill = document.getElementById("status-pill");
   const footerStats = document.getElementById("footer-stats");
   const stream = document.getElementById("stream");
+
+  function populateSelect() {
+    select.innerHTML = Object.keys(LABELS)
+      .map((id) => `<option value="${id}">${LABELS[id]}</option>`)
+      .join("");
+  }
+
+  async function loadBoards() {
+    try {
+      const response = await fetch("/api/boards", { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const boards = await response.json();
+      const map = {};
+      boards.forEach((board) => {
+        if (board && board.id) {
+          map[board.id] = board.name || board.short_name || board.id;
+        }
+      });
+      if (Object.keys(map).length > 0) {
+        LABELS = map;
+        populateSelect();
+      }
+    } catch (error) {
+      populateSelect();
+    }
+  }
 
   function setFeedback(message, type) {
     feedbackEl.textContent = message || "";
@@ -192,5 +219,6 @@
     }, 1500);
   });
 
+  loadBoards();
   pollHealth();
 })();

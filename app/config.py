@@ -27,11 +27,32 @@ STATIC_DIR: Path = WEB_DIR / "static"
 # Cámara
 # ---------------------------------------------------------------------------
 CAMERA_INDEX: int = int(os.environ.get("CAMERA_INDEX", "0"))  # /dev/video0
+# URL de un stream remoto (p.ej. cámara IP / IP Webcam). Si está definida,
+# tiene prioridad sobre CAMERA_INDEX.
+CAMERA_URL: str = os.environ.get("CAMERA_URL", "")
+# Archivo que persiste la URL de cámara elegida desde la web. Tiene prioridad
+# sobre CAMERA_URL y CAMERA_INDEX para que sobreviva a reinicios del servicio.
+CAMERA_URL_FILE: Path = Path(os.environ.get("CAMERA_URL_FILE", DATA_DIR / "camera_url.txt"))
 CAMERA_WIDTH: int = 640
 CAMERA_HEIGHT: int = 480
 CAMERA_FPS_TARGET: int = 15
 CAMERA_RETRY_DELAY_S: float = 2.0
 FRAME_QUEUE_SIZE: int = 2
+
+
+def load_camera_source() -> "int | str":
+    """Devuelve la fuente de cámara efectiva.
+
+    Precedencia: (1) override persistido desde la web (``CAMERA_URL_FILE``),
+    (2) variable ``CAMERA_URL``, (3) ``CAMERA_INDEX``.
+    """
+    if CAMERA_URL_FILE.exists():
+        text = CAMERA_URL_FILE.read_text(encoding="utf-8").strip()
+        if text:
+            return text
+    if CAMERA_URL:
+        return CAMERA_URL
+    return CAMERA_INDEX
 
 # ---------------------------------------------------------------------------
 # Detector ORB
@@ -42,14 +63,16 @@ ORB_EDGE_THRESHOLD: int = 31
 ORB_PATCH_SIZE: int = 31
 LOWE_RATIO: float = 0.75
 MIN_MATCH_COUNT: int = 10
-MIN_INLIERS: int = 15
+MIN_INLIERS: int = 20
 RANSAC_REPROJ_THRESHOLD: float = 5.0
-SCORE_THRESHOLD: float = 0.35
+SCORE_THRESHOLD: float = 0.60
 MIN_BOX_AREA_RATIO: float = 0.02
 MAX_BOX_AREA_RATIO: float = 0.90
 NMS_IOU_THRESHOLD: float = 0.30
 INSTANCE_CENTER_DISTANCE_PX: float = 40.0
-MAX_INSTANCES_PER_TEMPLATE: int = 4
+# 1 instancia por plantilla: el visor muestra UNA placa a la vez. Más de 1
+# generaba cajas fantasma superpuestas (descriptores sobrantes re-matheados).
+MAX_INSTANCES_PER_TEMPLATE: int = 1
 # Si el polígono proyectado ocupa menos que esta fracción de su bounding box se
 # considera una homografía degenerada y se descarta.
 MIN_POLYGON_FILL_RATIO: float = 0.20

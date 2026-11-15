@@ -28,6 +28,13 @@
     <span>Entrená la app con el <a href="/teach">modo enseñar</a> para empezar a reconocer placas.</span>
   </div>
 
+  <div class="camera-bar">
+    <label for="camera-url">📷 Cámara</label>
+    <input type="text" id="camera-url" placeholder="http://192.168.1.7:8080/video" spellcheck="false" autocomplete="off">
+    <button class="btn btn-secondary" id="camera-apply" type="button">Aplicar</button>
+    <span class="camera-status" id="camera-status"></span>
+  </div>
+
   <main class="layout">
     <section class="stage">
       <div class="video-wrap" id="videoWrap">
