@@ -273,6 +273,7 @@ footer{position:relative;z-index:1;border-top:1px solid rgba(255,255,255,.08);pa
 @media(max-width:760px){.concept-grid,.fail-grid{grid-template-columns:1fr}.concept-side{border-left:0;padding-left:0}}
 
 </style>
+<link href="rec/player.css?v=1" rel="stylesheet"/>
 </head>
 <body style="--accent:#22C55E;--accent2:#F59E0B">
 <div class="grid-overlay"></div>
@@ -288,6 +289,7 @@ footer{position:relative;z-index:1;border-top:1px solid rgba(255,255,255,.08);pa
 <a href="#problema">Visión</a>
 <a href="#como">Cómo funciona</a>
 <a href="#arquitectura">Arquitectura</a>
+<a href="#video">Video</a>
 <a href="#docs">Documentación</a>
 <a class="btn btn-ghost" href="https://github.com/wanderc137/detector-tarjetas" rel="noopener" style="padding:9px 15px" target="_blank">GitHub</a>
 </nav>
@@ -324,7 +326,46 @@ footer{position:relative;z-index:1;border-top:1px solid rgba(255,255,255,.08);pa
 
 
 
-<div class="rich-block"><section class="section" id="concepto"><div class="wrap"><div class="section-head"><div class="kicker">El concepto</div><h2>Qué es y por qué existe</h2><p class="section-sub">El problema, el enfoque y el alcance real del proyecto.</p></div><div class="concept-grid"><div><p>Detector de tarjetas es una aplicación web local que reconoce placas electrónicas en el video de una webcam USB. Usa OpenCV ORB, BFMatcher con ratio test y homografía RANSAC para comparar el cuadro contra plantillas que el usuario enseña desde /teach; al detectar, dibuja un globo cómic con MCU, RAM y reloj. Trae fichas de Arduino UNO R3, Nano, Raspberry Pi 4 y Pi 5.</p><p>La versión 1.0.0 demuestra que se puede hacer detección multinstancia sin redes neuronales, sin GPU y sin internet, con 41 tests y una inferencia objetivo de 200–300 ms en ARM64. No es un clasificador genérico ni hace OCR: solo reconoce lo enseñado y depende de la calidad de las muestras. En esta etapa el despliegue físico en la UNO Q quedó pendiente porque la placa no era accesible por red ni por ADB.</p></div><div class="concept-side"><div class="k">Cómo leer esta ficha</div><p>Los tropiezos salen de la bitácora y de las versiones tempranas. La evaluación usa seis criterios fijos, de 1 a 5, y no premia la espectacularidad: premia que el proyecto se pueda reproducir y entender.</p></div></div></div></section><section class="section tight"><div class="wrap"><div class="section-head"><div class="kicker">El proyecto en detalle</div><h2>Documentación preservada</h2><p class="section-sub">El README original, completo y en su contexto.</p></div><div class="detail rich">
+<div class="rich-block"><section class="section" id="concepto"><div class="wrap"><div class="section-head"><div class="kicker">El concepto</div><h2>Qué es y por qué existe</h2><p class="section-sub">El problema, el enfoque y el alcance real del proyecto.</p></div><div class="concept-grid"><div><p>Detector de tarjetas es una aplicación web local que reconoce placas electrónicas en el video de una webcam USB. Usa OpenCV ORB, BFMatcher con ratio test y homografía RANSAC para comparar el cuadro contra plantillas que el usuario enseña desde /teach; al detectar, dibuja un globo cómic con MCU, RAM y reloj. Trae fichas de Arduino UNO R3, Nano, Raspberry Pi 4 y Pi 5.</p><p>La versión 1.0.0 demuestra que se puede hacer detección multinstancia sin redes neuronales, sin GPU y sin internet, con 41 tests y una inferencia objetivo de 200–300 ms en ARM64. No es un clasificador genérico ni hace OCR: solo reconoce lo enseñado y depende de la calidad de las muestras. En esta etapa el despliegue físico en la UNO Q quedó pendiente porque la placa no era accesible por red ni por ADB.</p></div><div class="concept-side"><div class="k">Cómo leer esta ficha</div><p>Los tropiezos salen de la bitácora y de las versiones tempranas. La evaluación usa seis criterios fijos, de 1 a 5, y no premia la espectacularidad: premia que el proyecto se pueda reproducir y entender.</p></div></div></div></section>
+<section class="section tight rec-section" id="video" style="--accent:#2E7DFF;--accent2:#14F195">
+<div class="wrap">
+<div class="rec-kicker">REC · VIDEO · 3:04</div>
+<h2 class="rec-h2">Detector de tarjetas · ORB, homografía y cómic</h2>
+<p class="rec-lead">Cómo el detector reconoce Arduino UNO, Nano y Raspberry Pi con ORB, ratio test de Lowe, homografía RANSAC y NMS, y convierte cada caja en un globo de cómic con la ficha técnica de la placa.</p>
+<div class="rec-banner">
+<span class="rec-banner-icon">📋</span>
+<strong>Puedes copiar y pegar los comandos del video desde el video !!!</strong>
+<span>Pausá, seleccioná el texto de la terminal y copiá.</span>
+</div>
+<div class="rec-shell">
+<div class="rec-bar"><i></i><i></i><i></i><span class="rec-title">Detector de tarjetas · ORB, homografía y cómic · asciinema</span><span class="rec-rec"><b></b>REC</span></div>
+<div class="rec-screen-wrap">
+<div class="rec-screen" id="rec-screen"></div>
+<div class="rec-poster" id="rec-poster">
+<div class="rec-kicker">ASCIINEMA · 3:04</div>
+<h3>Detector de tarjetas · ORB, homografía y cómic</h3>
+<p>Cómo el detector reconoce Arduino UNO, Nano y Raspberry Pi con ORB, ratio test de Lowe, homografía RANSAC y NMS, y convierte cada caja en un globo de cómic con la ficha técnica de la placa.</p>
+<div class="rec-poster-meta">detector-tarjetas · código real</div>
+<button class="rec-btn rec-primary" id="rec-start" type="button">▶ Reproducir</button>
+</div>
+</div>
+<div class="rec-controls">
+<button class="rec-btn rec-primary" id="rec-play" type="button">▶ Reproducir</button>
+<button class="rec-btn" id="rec-restart" type="button">↺ Reiniciar</button>
+<input class="rec-progress" id="rec-range" type="range" min="0" max="1000" value="0" aria-label="Progreso"/>
+<span class="rec-time" id="rec-time">0:00 / 3:04</span>
+<select class="rec-speed" id="rec-speed" aria-label="Velocidad"><option value="1">1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select>
+<button class="rec-btn" id="rec-full" type="button" title="Pantalla completa">⛶</button>
+<button class="rec-btn" id="rec-copy" type="button">⧉ Copiar comandos</button>
+<a class="rec-download" href="rec/detector-tarjetas.cast" download>descargar .cast</a>
+</div>
+</div>
+<p class="rec-note">Los fragmentos corresponden al código real del repositorio, en las líneas indicadas. Los valores de configuración citados son los defaults de app/config.py.</p>
+<div class="rec-chapters"><span class="rec-chip"><b>0:06</b> EL PROBLEMA</span><span class="rec-chip"><b>0:20</b> ARQUITECTURA</span><span class="rec-chip"><b>0:34</b> CAPTURA</span><span class="rec-chip"><b>0:48</b> EL NÚCLEO</span><span class="rec-chip"><b>1:04</b> ORB</span><span class="rec-chip"><b>1:19</b> MATCHING</span><span class="rec-chip"><b>1:37</b> SCORE</span><span class="rec-chip"><b>1:52</b> INSTANCIAS</span><span class="rec-chip"><b>2:11</b> MODO ENSEÑAR</span><span class="rec-chip"><b>2:27</b> STREAM</span><span class="rec-chip"><b>2:42</b> CÓMO EJECUTARLO</span></div>
+</div>
+</section>
+
+<section class="section tight"><div class="wrap"><div class="section-head"><div class="kicker">El proyecto en detalle</div><h2>Documentación preservada</h2><p class="section-sub">El README original, completo y en su contexto.</p></div><div class="detail rich">
 <p><strong>Visión artificial en tiempo real, 100 % local, sin modelos externos.</strong></p>
 <p>Aplicación web auto-contenida que <strong>reconoce placas electrónicas</strong> (Arduino UNO R3,
 Arduino Nano, Raspberry Pi 4 y Raspberry Pi 5) en el video de una webcam USB y
@@ -2152,5 +2193,7 @@ contexto.</p>
   document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
 })();
 </script>
+<script defer src="rec/detector-tarjetas.cast.js?v=1"></script>
+<script defer src="rec/player.js?v=1"></script>
 </body>
 </html>
