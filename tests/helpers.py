@@ -46,8 +46,8 @@ def make_texture(
             y2 = int(rng.integers(0, height))
             cv2.line(image, (x, y), (x2, y2), color, int(rng.integers(1, 4)), cv2.LINE_AA)
 
-    cv2.putText(image, "UNO R3", (18, height - 26), cv2.FONT_HERSHEY_SIMPLEX, 1.3, (255, 255, 255), 3, cv2.LINE_AA)
-    cv2.putText(image, "ATmega328P", (26, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (230, 230, 230), 2, cv2.LINE_AA)
+    cv2.putText(image, "UNO R4", (18, height - 26), cv2.FONT_HERSHEY_SIMPLEX, 1.3, (255, 255, 255), 3, cv2.LINE_AA)
+    cv2.putText(image, "RA4M1", (26, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (230, 230, 230), 2, cv2.LINE_AA)
     cv2.putText(image, "ARDUINO", (26, 74), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (120, 220, 255), 2, cv2.LINE_AA)
     return image
 

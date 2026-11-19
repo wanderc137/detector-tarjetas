@@ -1,6 +1,7 @@
 # Despliegue en Arduino UNO Q — estado real (as-built)
 
-> Última actualización: 2026-11-14. Refleja el sistema tal como quedó funcionando.
+> Última actualización: 2026-11-19. Refleja el sistema tal como quedó funcionando
+> (catálogo de 4 placas y unidad systemd renderizada desde plantilla).
 
 ## 1. Hardware
 
@@ -31,48 +32,69 @@ con WiFi estable. Para cámara USB por hub hace falta el modo host.
 | Servicio | Valor |
 |---|---|
 | WiFi | SSID `Nv` |
-| IP de la placa | `192.168.1.5/24` (estática, gateway/dns `192.168.1.254`) |
+| IP de la placa | `192.168.10.112/24` (DHCP; verificada por adb en la última revisión) |
 | SSH | puerto **2222**, usuario `arduino`, clave `~/.ssh/unoq_key` (en la notebook) |
-| Web | `http://192.168.1.5:8000` |
-| Servicio | `detector-tarjetas.service` (systemd, `enabled`, `Restart=always`, `User=jma`) |
+| Acceso alternativo | USB-C + **adb**, serial `142970805` (la red de la notebook y la placa pueden estar en subredes distintas) |
+| Web | `http://192.168.10.112:8000` (o `http://127.0.0.1:8000` desde la placa) |
+| Servicio | `detector-tarjetas.service` (systemd, `enabled` + `active`, `Restart=always`, `User=jma`, `Group=jma`) |
 | App en la placa | `/home/jma/detector-tarjetas` (owner `jma`, home 700 → requiere sudo) |
-| Cámara | `CAMERA_URL=http://192.168.1.7:8080/video` (app IP Webcam del teléfono) |
+| Cámara (unidad) | `CAMERA_URL=http://192.168.1.8:8080/video` declarada en la unidad instalada |
+| Cámara (runtime) | override persistido en `data/camera_url.txt` → `http://192.168.10.205:8080/video`; tiene prioridad sobre `CAMERA_URL` |
 
 La contraseña sudo de `arduino` no se guarda aquí (no publicar). SSH con
-`-o BatchMode=yes -i ~/.ssh/unoq_key arduino@192.168.1.5 -p 2222`.
+`-o BatchMode=yes -i ~/.ssh/unoq_key arduino@<ip> -p 2222`.
 
 ## 4. Estado actual
 
 - App **corriendo**, `/api/health` → `camera.present=true`, `fps ~30`,
-  `index=http://192.168.1.7:8080/video`.
-- **Plantillas**: solo `raspberry_pi_2` tiene 24 muestras reales (capturadas por el usuario
-  en `/teach`). Las demás etiquetas están en 0. Las plantillas *sembradas* desde imágenes
-  web se borraron (causaban falsos positivos).
+  `index=http://192.168.10.205:8080/video`.
+- **Catálogo**: `data/boards.json` tiene las **4 fichas vigentes**
+  (`arduino_uno_r4_wifi`, `raspberry_pi_4`, `arduino_mkr_wifi_1010`, `esp32`) y
+  `/api/boards` las devuelve en ese orden.
+- **Plantillas**: quedan **37 muestras históricas** bajo la etiqueta
+  `raspberry_pi_2`. Esa etiqueta ya **no está en el catálogo**: se conserva como
+  *label degradado* (se carga y detecta, pero sin ficha técnica asociada). Las
+  demás etiquetas están en 0. Las plantillas *sembradas* desde imágenes web se
+  borraron (causaban falsos positivos).
 - **Detección en vivo**: funciona (score 0.90–0.94 con la placa real). El falso positivo
-  residual depende del ángulo/fondo (las 24 muestras incluyen el fondo de la mesa; se
+  residual depende del ángulo/fondo (las muestras incluyen el fondo de la mesa; se
   sugiere recapturar con fondo limpio).
 - **UI**: paleta sobria (sin neón), globo cómic sin recuadro, con suavizado y separación.
 
 ## 5. Pipeline de despliegue (desde la notebook)
 
 ```bash
-# editar en la notebook, luego:
-node --check web/static/app.js                 # si tocaste JS
-scp -P 2222 -i ~/.ssh/unoq_key web/static/app.js arduino@192.168.1.5:/home/arduino/app.js
+# despliegue normal por SSH:
+./scripts/deploy.sh --host <ip> --user arduino
 
-# por SSH instalar como jma y reiniciar el servicio:
-printf 'CONTRASEÑA\n' | sudo -S install -m 0644 -o jma -g jma /home/arduino/app.js /home/jma/detector-tarjetas/web/static/app.js
-printf 'CONTRASEÑA\n' | sudo -S systemctl restart detector-tarjetas
-# esperar ~8-10s; curl transitorio HTTP 000/exit 7 es normal tras el restart
+# si la red no es alcanzable (subredes distintas), fallback USB-C:
+./scripts/deploy.sh --via-adb --adb-serial 142970805
 ```
 
-El servicio vive en `/etc/systemd/system/detector-tarjetas.service` con
-`Environment=CAMERA_URL=...` (tiene prioridad sobre `CAMERA_INDEX`).
+`scripts/deploy.sh`:
+
+1. copia `app/`, `web/`, `data/boards.json` y `scripts/` con tar (preserva
+   `data/templates/` y `data/camera_url.txt`);
+2. **renderiza la unidad** desde `systemd/detector-tarjetas.service`
+   (`@USER@`, `@GROUP@`, `@WORKDIR@`, `@PORT@`); nunca copia la plantilla cruda;
+3. detecta la unidad instalada con `systemctl show -p User -p Group -p
+   WorkingDirectory` y adopta esos valores si no se pasaron `--user`/`--group`/
+   `--remote-dir`; si difieren del objetivo, aborta salvo `--force-unit`;
+4. siembra `/etc/default/detector-tarjetas` **solo si no existe**, copiando
+   `CAMERA_URL`/`CAMERA_INDEX` de la unidad anterior; un redeploy nunca
+   sobrescribe la configuración local;
+5. hace `daemon-reload`, `enable` y `restart`, y verifica `is-enabled`,
+   `is-active` y `/api/health`.
+
+La unidad instalada vive en `/etc/systemd/system/detector-tarjetas.service` y
+carga la configuración local con
+`EnvironmentFile=-/etc/default/detector-tarjetas` (ahí va `CAMERA_URL`, que tiene
+prioridad sobre `CAMERA_INDEX`).
 
 ## 6. Entrenamiento (para que detecte una placa nueva)
 
-1. Abrir `http://192.168.1.5:8000/teach`.
-2. Elegir la placa del selector (carga dinámicamente las fichas de `data/boards.json`).
+1. Abrir `http://<ip-de-la-placa>:8000/teach`.
+2. Elegir la placa del selector (carga dinámicamente las 4 fichas de `data/boards.json`).
 3. Mostrar la placa real a la cámara (buena luz, fondo contrastado) y tocar
    **Capturar muestra** 4–5 veces variando ángulo/distancia.
 4. Tocar **Entrenar / recargar** al final.

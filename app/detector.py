@@ -44,7 +44,7 @@ def normalize_label(raw: object, fallback: str = "") -> str:
 
     ``numpy.savez`` guarda el label como un array 0-d de Unicode; aplicar
     ``str()`` sobre él devuelve la representación del escalar **entre comillas
-    simples** (``"'arduino_uno_r3'"``). Esta función extrae el escalar con
+    simples** (``"'arduino_uno_r4_wifi'"``). Esta función extrae el escalar con
     ``item()``, decodifica bytes si hace falta y elimina comillas residuales de
     archivos guardados por versiones anteriores.
 

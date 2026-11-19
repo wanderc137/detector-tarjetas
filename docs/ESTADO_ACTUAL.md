@@ -1,14 +1,17 @@
 # Estado actual del detector de tarjetas (as-built)
 
-> Snapshot del 2026-11-14. Describe cómo quedó el sistema DESPUÉS de todos los
+> Snapshot del 2026-11-19. Describe cómo quedó el sistema DESPUÉS de todos los
 > ajustes de campo, que difieren del diseño original (`PLAN.md` / `README.md`).
+> El catálogo vigente tiene **4 fichas**; el resto de los ids que aparecen aquí
+> son historia de la migración.
 
 ## 1. Qué es y qué hace
 
-Página web servida por la UNO Q en `http://192.168.1.5:8000` que detecta placas
-(Arduino UNO/Nano/Mega, ESP32, NodeMCU, Raspberry Pi, shield Ethernet, etc.) con
-**ORB + RANSAC** sobre el stream de una cámara IP, y dibuja un **globo cómic** con la
-ficha técnica de la placa reconocida. Interfaz de **entrenamiento** en `/teach`.
+Página web servida por la UNO Q en `http://<ip-de-la-placa>:8000` que detecta
+placas del catálogo vigente (`arduino_uno_r4_wifi`, `raspberry_pi_4`,
+`arduino_mkr_wifi_1010`, `esp32`) con **ORB + RANSAC** sobre el stream de una
+cámara IP, y dibuja un **globo estabilizado** con la ficha técnica de la placa
+reconocida. Interfaz de **entrenamiento** en `/teach`.
 
 ## 2. Cambios respecto al diseño original
 
@@ -43,8 +46,9 @@ En `app/config.py`:
 `app/detector.py` `_postprocess`: además del NMS por IoU, suprime por **contención**
 (si el centro de una caja cae dentro de otra caja del mismo label, se descarta).
 
-### 2.4 UI del globo (sin recuadro + estabilizado)
-- Se **quitó el recuadro** (no se llama `drawBox()`; solo queda el globo cómic).
+### 2.4 UI del globo (marco sobrio + estabilizado)
+- `drawBox()` dibuja un **marco dorado fino con esquinas de visor** (`COLOR_BOX
+  #c9a35a`, 5 px si la placa está seleccionada); ya no hay glow neón ni relleno.
 - Globo **estabilizado** en `app.js`:
   - **Filtro de mediana** sobre una ventana de `SMOOTH_WINDOW=9` frames (rechaza el
     jitter frame-a-frame de ORB+RANSAC con la tarjeta quieta).
@@ -57,20 +61,27 @@ En `app/config.py`:
 
 ## 3. Estado de plantillas (`data/templates/`)
 
-| Label | Muestras | Origen |
+| Label | Muestras | Estado |
 |---|---|---|
-| `raspberry_pi_2` | **24** | capturas reales del usuario (re-etiquetadas desde `raspberry_pi_4`) |
-| resto | 0 | sin entrenar aún |
+| `raspberry_pi_2` | **37** | histórico: **label degradado**, fuera del catálogo vigente (se carga y detecta, sin ficha técnica) |
+| `arduino_uno_r4_wifi` | 0 | sin entrenar aún |
+| `raspberry_pi_4` | 0 | sin entrenar aún |
+| `arduino_mkr_wifi_1010` | 0 | sin entrenar aún |
+| `esp32` | 0 | sin entrenar aún |
 
 - Las **20 plantillas sembradas** desde imágenes de Wikimedia se **borraron** (causaban
   falsos positivos de fondo).
-- `data/boards.json` tiene **9 fichas**: arduino_uno_r3, arduino_nano, raspberry_pi_4,
-  raspberry_pi_5, esp32, nodemcu, raspberry_pi_2, arduino_mega_2560, arduino_ethernet_shield.
+- `data/boards.json` tiene **4 fichas vigentes**, en este orden:
+  `arduino_uno_r4_wifi`, `raspberry_pi_4`, `arduino_mkr_wifi_1010`, `esp32`.
+- Los ids del catálogo anterior quedaron retirados en la migración; el catálogo
+  vigente es el de 4 fichas. `raspberry_pi_2` tampoco está en el catálogo: es el
+  label degradado que conserva las muestras históricas.
 
 ## 4. Detección en vivo
 
-- Funciona: score **0.90–0.94** con la placa real Raspberry Pi 2.
-- Falso positivo residual depende del **ángulo/fondo** (las 24 muestras incluyen el fondo
+- Funciona: score **0.90–0.94** con la placa real Raspberry Pi 2 (label
+  `raspberry_pi_2`, degradado).
+- Falso positivo residual depende del **ángulo/fondo** (las 37 muestras incluyen el fondo
   de la mesa). Mejora: recapturar con fondo limpio o usar `train_from_stream.py`.
 
 ## 5. Scripts auxiliares (`scripts/`)
@@ -80,21 +91,25 @@ En `app/config.py`:
 | `seed_templates.py` | genera plantillas ORB desde imágenes sueltas (mismas params que el detector) |
 | `train_from_stream.py` | genera ~100-150 plantillas desde el stream de la cámara IP (video 1 min, con deduplicación) |
 | `diag_match.py` | diagnóstico: carga un frame + una plantilla, reporta matches/inliers y su distribución |
-| `deploy.sh` | despliegue original |
+| `deploy.sh` | despliegue SSH o USB (adb): renderiza la unidad desde plantilla, preserva `/etc/default/detector-tarjetas` y verifica el servicio |
 | `discover_unoq.sh` | descubrimiento de la placa |
 
 ## 6. Pendientes
 
-1. **Entrenar** las placas restantes (Mega, shield Ethernet, clon UNO) en `/teach`.
-2. Recapturar Raspberry Pi 2 con **fondo limpio** para eliminar el falso positivo por fondo.
+1. **Entrenar** las 4 placas del catálogo (`arduino_uno_r4_wifi`, `raspberry_pi_4`,
+   `arduino_mkr_wifi_1010`, `esp32`) en `/teach`.
+2. Recapturar Raspberry Pi 2 con **fondo limpio** para eliminar el falso positivo por fondo
+   (o retirar el label degradado `raspberry_pi_2` cuando ya no haga falta).
 3. Confirmar estabilidad del globo (estático y separado de la tarjeta).
 4. Opcional: anclar el globo a posición fija de pantalla si el seguimiento molesta.
 
 ## 7. Runbook operativo
 
-- **Acceso**: `ssh -p 2222 -i ~/.ssh/unoq_key arduino@192.168.1.5` (sudo vía `sudo -S`).
-- **Despliegue**: editar en notebook → `node --check` (si JS) / `py_compile` (si Python) →
-  `scp` a `/home/arduino/` → `sudo install -m 0644 -o jma -g jma` a `/home/jma/detector-tarjetas/...` →
-  `sudo systemctl restart detector-tarjetas` → esperar ~8-10 s.
+- **Acceso**: `ssh -p 2222 -i ~/.ssh/unoq_key arduino@<ip-de-la-placa>` (sudo vía `sudo -S`);
+  si la red no es alcanzable, USB-C + `adb -s 142970805 shell`.
+- **Despliegue**: `scripts/deploy.sh --host <ip> --user arduino` o
+  `scripts/deploy.sh --via-adb --adb-serial 142970805`. Renderiza la unidad desde
+  `systemd/detector-tarjetas.service`, detecta la unidad instalada, siembra
+  `/etc/default/detector-tarjetas` solo si no existe y verifica `is-enabled`/`is-active`/health.
 - **Cambio de cámara**: sin SSH, desde la barra "📷 Cámara" de la página (ver 2.1).
 - Detalles completos: ver `DESPLIEGUE_UNOQ.md`.

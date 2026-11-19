@@ -12,7 +12,7 @@ from app.specs import REQUIRED_FIELDS, BoardSpecs, format_clock, format_ram, for
 PROJECT_DIR = Path(__file__).resolve().parents[1]
 BOARDS_JSON = PROJECT_DIR / "data" / "boards.json"
 
-EXPECTED_IDS = {"arduino_uno_r3", "arduino_nano", "raspberry_pi_4", "raspberry_pi_5"}
+EXPECTED_IDS = ["arduino_uno_r4_wifi", "raspberry_pi_4", "arduino_mkr_wifi_1010", "esp32"]
 
 
 @pytest.fixture(scope="module")
@@ -22,10 +22,11 @@ def specs() -> BoardSpecs:
 
 
 def test_loads_four_boards_with_required_fields(specs: BoardSpecs) -> None:
-    """CT01: el archivo real carga 4 placas y todos los campos obligatorios."""
+    """CT01: el archivo real carga 4 placas en el orden canónico."""
     boards = specs.get_all()
     assert len(boards) == 4
-    assert {board.id for board in boards} == EXPECTED_IDS
+    assert [board.id for board in boards] == EXPECTED_IDS
+    assert set(EXPECTED_IDS) == set(specs.ids())
 
     for board in boards:
         payload = board.to_dict()
@@ -74,12 +75,21 @@ def test_missing_file_raises(tmp_path: Path) -> None:
 
 def test_summary_has_three_specs(specs: BoardSpecs) -> None:
     """El globo cómic usa exactamente 3 especificaciones cortas."""
-    summary = specs.get_summary("arduino_uno_r3")
+    summary = specs.get_summary("arduino_uno_r4_wifi")
     assert list(summary.keys()) == ["MCU", "RAM", "Reloj"]
     assert len(summary) == 3
-    assert summary["MCU"] == "ATmega328P"
-    assert summary["RAM"] == "2 KB"
+    assert summary["MCU"] == "Renesas RA4M1"
+    assert summary["RAM"] == "32 KB"
+    assert summary["Reloj"] == "48 MHz"
     assert specs.get_summary("no_existe") == {}
+
+
+def test_default_labels_match_catalog(specs: BoardSpecs) -> None:
+    """CAT-03: ``DEFAULT_LABELS`` coincide con el set de ids del catálogo."""
+    from app import config
+
+    assert tuple(EXPECTED_IDS) == config.DEFAULT_LABELS
+    assert tuple(specs.ids()) == config.DEFAULT_LABELS
 
 
 def test_unknown_board_returns_none(specs: BoardSpecs) -> None:

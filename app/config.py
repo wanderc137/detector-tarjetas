@@ -83,10 +83,10 @@ MIN_POLYGON_FILL_RATIO: float = 0.20
 TEMPLATE_MIN_KEYPOINTS: int = 50
 TEMPLATE_EXTENSION: str = ".npz"
 DEFAULT_LABELS: tuple[str, ...] = (
-    "arduino_uno_r3",
-    "arduino_nano",
+    "arduino_uno_r4_wifi",
     "raspberry_pi_4",
-    "raspberry_pi_5",
+    "arduino_mkr_wifi_1010",
+    "esp32",
 )
 
 # ---------------------------------------------------------------------------

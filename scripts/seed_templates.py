@@ -10,7 +10,7 @@ Uso:
     python3 seed_templates.py <label> <plantillas_dir> <img1> [img2 ...]
 
 Ejemplo:
-    python3 seed_templates.py arduino_uno_r3 data/templates uno_1.jpg uno_2.jpg
+    python3 seed_templates.py arduino_uno_r4_wifi data/templates uno_1.jpg uno_2.jpg
 
 Las plantillas se guardan en ``<plantillas_dir>/<label>/seed-<n>.npz``.
 """

@@ -9,8 +9,8 @@ matcheo de descriptores consecutivos). Así se obtienen plantillas *diversas*
 Uso:
     python3 train_from_stream.py <label> <duracion_seg> [url] [out_dir]
 
-Ejemplo (1 minuto, placa Raspberry Pi 2):
-    python3 train_from_stream.py raspberry_pi_2 60
+Ejemplo (1 minuto, placa Raspberry Pi 4):
+    python3 train_from_stream.py raspberry_pi_4 60
 
 Por defecto la cámara es http://192.168.1.7:8080/video (app "IP Webcam").
 """

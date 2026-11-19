@@ -17,9 +17,9 @@ tiempo real, sin enviar imágenes a internet.
 La aplicación corre en el **lado Linux de la Arduino UNO Q**. El usuario abre una
 página desde cualquier navegador de la misma red y ve:
 
-- el video en vivo de la webcam conectada a la placa;
-- un **recuadro verde** alrededor de cada placa reconocida;
-- un **globo de historieta** con el nombre corto y tres datos (MCU, RAM y reloj);
+- el video en vivo de la cámara (IP en el despliegue real, o webcam USB conectada a la placa);
+- un **marco dorado con esquinas de visor** alrededor de cada placa reconocida;
+- un **globo** con el nombre corto y tres datos (MCU, RAM y reloj);
 - un **panel lateral** con la ficha técnica completa al hacer clic.
 
 No utiliza modelos de inteligencia artificial preentrenados, ni GPU, ni servicios
@@ -40,7 +40,7 @@ cada placa desde la propia interfaz.
 
 | Incluido | No incluido |
 |---|---|
-| Detección de 4 modelos: UNO R3, Nano, Pi 4, Pi 5 | Reconocimiento genérico de cualquier placa |
+| Detección de las 4 placas del catálogo: UNO R4 WiFi, Raspberry Pi 4, MKR WiFi 1010 y ESP32 | Reconocimiento genérico de cualquier placa |
 | Enseñanza de nuevas etiquetas desde el navegador | Entrenamiento de redes neuronales |
 | Fichas técnicas editables en JSON | Base de datos remota o sincronización |
 | Stream MJPEG y API JSON | Grabación de video o almacenamiento de imágenes |
@@ -56,8 +56,9 @@ cada placa desde la propia interfaz.
 | Parte | Función | Obligatorio |
 |---|---|---|
 | Arduino UNO Q | Ejecuta el servidor, la captura y la inferencia (lado Linux) | Sí (o notebook) |
-| Webcam USB UVC | Fuente de video; 640×480, MJPG recomendado | Sí |
-| Hub USB-C (alimentado) | Conecta cámara y alimenta la placa si falta un puerto | Si hace falta |
+| Cámara IP (app IP Webcam en un teléfono) | Fuente de video por URL HTTP; es la fuente del despliegue real | Sí |
+| Webcam USB UVC | Alternativa local (`CAMERA_INDEX`); por el hub puede desestabilizar la placa | No |
+| Hub USB-C (alimentado) | Conecta periféricos y alimenta la placa si falta un puerto | Si hace falta |
 | Router / LAN | Transporta HTTP entre la placa y el navegador | Sí |
 | Notebook / PC / teléfono | Abre la interfaz web; no procesa video | Sí (cliente) |
 | Fuente USB-C adecuada | Alimentación estable de la placa y el hub | Sí |
@@ -83,7 +84,7 @@ cada placa desde la propia interfaz.
 | Barra superior | Botón “🎓 Modo enseñar” | Va a `/teach` |
 | Franja amarilla | Aviso de cámara | Aparece si `camera.present=false` |
 | Franja azul | Aviso de plantillas | Aparece si no hay ninguna muestra |
-| Escenario | Video + canvas | Stream y superposición de recuadros/globos |
+| Escenario | Video + canvas | Stream y superposición de marcos/globos |
 | Escenario | Texto de ayuda | “Hacé clic sobre una placa o su globo…” + ms de inferencia |
 | Panel lateral | Ficha técnica | Se abre al hacer clic; se cierra con `×` o `Esc` |
 | Pie | Leyenda y contadores | Detecciones, muestras y etiquetas entrenadas |
@@ -96,13 +97,15 @@ cada placa desde la propia interfaz.
 
 | Parámetro | Especificación |
 |---|---|
-| Placas reconocidas de fábrica | Arduino UNO R3, Arduino Nano (R3), Raspberry Pi 4 Model B, Raspberry Pi 5 |
+| Placas reconocidas de fábrica | Arduino UNO R4 WiFi, Raspberry Pi 4 Model B, Arduino MKR WiFi 1010 y ESP32 DevKit V1 (4 fichas en `data/boards.json`). Las muestras históricas de `raspberry_pi_2` siguen cargando como **label degradado**, sin ficha. |
 | Método de detección | ORB (500 keypoints) + BFMatcher Hamming + ratio test 0.75 + homografía RANSAC |
-| Instancias simultáneas | Hasta 4 por plantilla, más plantillas de otras etiquetas |
+| Instancias simultáneas | 1 por plantilla (el visor muestra una placa a la vez), más plantillas de otras etiquetas |
 | Cajas de salida | Normalizadas `[0,1]` respecto del frame |
-| Umbral de publicación | Score ≥ 0.35, ≥ 15 inliers, ≥ 10 matches |
-| Entrada de video | `/dev/video0`, V4L2, MJPG, 640×480, 15 fps objetivo |
+| Umbral de publicación | Score ≥ 0.60, ≥ 20 inliers, ≥ 10 matches |
+| Entrada de video | Cámara IP HTTP/MJPEG por FFMPEG (`CAMERA_URL`) o webcam UVC por V4L2 (`CAMERA_INDEX`), 640×480, 15 fps objetivo |
 | Salida de video | MJPEG `multipart/x-mixed-replace`, calidad JPEG 85, hasta 15 fps |
+| Datos del globo | `short_name` + MCU (antes del paréntesis) + RAM formateada + reloj formateado |
+| Datos del panel | MCU/SoC, reloj, RAM, almacenamiento, GPIO, voltaje, dimensiones, conectividad, año, descripción y enlaces |
 | Frecuencia de inferencia | Mínimo 250 ms entre inferencias (≈4 Hz) |
 | Latencia de superposición | ≤ 250 ms de polling + tiempo de inferencia |
 | Persistencia | Archivos `.npz` en `data/templates/<etiqueta>/` |
@@ -110,7 +113,7 @@ cada placa desde la propia interfaz.
 | Fichas técnicas | JSON validado al cargar, recargado por `mtime`/tamaño |
 | Idioma | Español (interfaz, mensajes, documentación) |
 
-### 3.2 Eléctricas y ambientales (UNO Q + webcam)
+### 3.2 Eléctricas y ambientales (UNO Q + cámara)
 
 | Parámetro | Valor |
 |---|---|
@@ -180,7 +183,7 @@ El script crea `.venv`, instala `requirements-dev.txt` y arranca el servidor.
 
 ### 4.3 Instalación en la Arduino UNO Q (producción)
 
-1. Conectar la UNO Q a la red y a la webcam.
+1. Conectar la UNO Q a la red y dejar disponible la cámara IP (o una webcam USB).
 2. Descubrirla:
 
    ```bash
@@ -199,11 +202,16 @@ El script crea `.venv`, instala `requirements-dev.txt` y arranca el servidor.
    ./scripts/deploy.sh --host <ip> --user arduino --try-defaults
    ```
 
-4. Si SSH no está disponible, usar USB-C:
+4. Si SSH no está disponible, usar USB-C/adb (vía de campo):
 
    ```bash
-   ./scripts/deploy.sh --via-adb
+   adb devices
+   ./scripts/deploy.sh --via-adb --adb-serial 142970805
    ```
+
+   El script copia el proyecto, verifica OpenCV, renderiza la unidad systemd,
+   siembra `/etc/default/detector-tarjetas` solo si no existe y deja el servicio
+   `enabled` con `Restart=always`.
 
    o habilitar SSH desde Arduino App Lab:
 
@@ -222,6 +230,7 @@ El script crea `.venv`, instala `requirements-dev.txt` y arranca el servidor.
 | Comprobación | Comando | Resultado esperado |
 |---|---|---|
 | Proceso vivo | `systemctl status detector-tarjetas` | `active (running)` |
+| Arranque automático | `systemctl is-enabled detector-tarjetas` | `enabled` |
 | API sana | `curl -s http://<ip>:8000/api/health` | `"status": "ok"` |
 | Cámara presente | Igual anterior | `"present": true` |
 | Stream | Abrir `/stream.mjpg` en navegador | Video en vivo |
@@ -243,21 +252,33 @@ El script crea `.venv`, instala `requirements-dev.txt` y arranca el servidor.
 ### 5.2 Detección
 
 1. Apuntar la cámara a una placa entrenada.
-2. Esperar a que aparezca el recuadro verde (≤ 1 s en condiciones normales).
+2. Esperar a que aparezca el marco dorado (≤ 1 s en condiciones normales).
 3. Leer el globo: nombre corto, MCU, RAM y reloj.
 4. Hacer clic en la placa o el globo para ver la ficha completa.
 5. Cerrar el panel con `×` o `Esc`.
+
+Los valores exactos que muestra el globo para el catálogo vigente son:
+
+| Etiqueta | Título | MCU | RAM | Reloj |
+|---|---|---|---|---|
+| `arduino_uno_r4_wifi` | UNO R4 WiFi | Renesas RA4M1 | 32 KB | 48 MHz |
+| `raspberry_pi_4` | Pi 4 | Broadcom BCM2711 | 2 GB | 1.5 GHz |
+| `arduino_mkr_wifi_1010` | MKR WiFi 1010 | Microchip SAMD21 | 32 KB | 48 MHz |
+| `esp32` | ESP32 | Espressif ESP32-WROOM-32 | 532 KB | 240 MHz |
+
+Si la etiqueta no tiene ficha (por ejemplo, la histórica `raspberry_pi_2`), el
+globo muestra el `label` como título y el panel avisa que no hay ficha técnica.
 
 ### 5.3 Interpretación de las detecciones
 
 | Señal | Significado |
 |---|---|
-| Recuadro verde fino | Detección con score suficiente |
-| Recuadro verde grueso + brillo | Placa seleccionada (ficha abierta) |
+| Marco dorado fino | Detección con score suficiente |
+| Marco dorado grueso + brillo | Placa seleccionada (ficha abierta) |
 | Globo arriba de la placa | Espacio libre suficiente arriba |
 | Globo abajo de la placa | Se ubicó abajo por falta de espacio |
 | Globo desplazado | Se movió para no pisar otro globo |
-| Sin recuadro | No hay plantilla, score bajo, o placa fuera de encuadre |
+| Sin marco | No hay plantilla, score bajo, o placa fuera de encuadre |
 
 ### 5.4 Modo enseñar
 
@@ -321,11 +342,12 @@ sudo systemctl restart detector-tarjetas
 
 ### 6.4 Cambio de cámara
 
-1. Conectar la nueva webcam.
-2. Verificar el índice: `v4l2-ctl --list-devices`.
-3. Ajustar `CAMERA_INDEX` (variable de entorno o unidad systemd).
-4. Reiniciar el servicio.
-5. **Reentrenar** si la nueva cámara cambia color, enfoque o distancia focal.
+1. Dejar disponible la nueva fuente (URL de la cámara IP o webcam USB conectada).
+2. Si es webcam, verificar el índice: `v4l2-ctl --list-devices`.
+3. Cambiar la fuente desde la barra "📷 Cámara" de la página (persiste en
+   `data/camera_url.txt`) o ajustar `CAMERA_URL`/`CAMERA_INDEX` en
+   `/etc/default/detector-tarjetas` y reiniciar el servicio.
+4. **Reentrenar** si la nueva cámara cambia color, enfoque o distancia focal.
 
 ---
 
@@ -360,9 +382,9 @@ la detección se vuelve inestable. Usá luz difusa.
 Sí, dentro de ángulos moderados (±30–40°). La homografía corrige la perspectiva.
 Ángulos extremos o placas muy pequeñas fallan.
 
-**¿Puede distinguir dos UNO R3 iguales?**
-Sí: cada una recibe un `instance_id` y se dibuja por separado, hasta 4 copias por
-plantilla.
+**¿Puede distinguir dos UNO R4 WiFi iguales?**
+No: el detector publica una instancia por plantilla (`MAX_INSTANCES_PER_TEMPLATE=1`)
+porque el visor muestra una placa a la vez. Las copias adicionales se suprimen.
 
 **¿Puedo ver el video desde el teléfono?**
 Sí, si el teléfono está en la misma LAN y abrís `http://<ip-unoq>:8000/`.
@@ -382,9 +404,8 @@ El detector la quita en la próxima recarga y deja de reconocer esa etiqueta.
 
 **¿Puedo ejecutarlo en una Raspberry Pi?**
 El código es Python + OpenCV y debería funcionar en cualquier Linux ARM64/x86_64
-con una cámara V4L2. El proyecto está probado en notebook y documentado para la
-UNO Q (el despliegue físico en la placa quedó pendiente al cierre de esta
-edición).
+con una cámara V4L2 o una cámara IP. El proyecto está probado en notebook y el
+servicio está desplegado y activo en la UNO Q.
 
 **¿Por qué el frame de estado dice “CAMARA NO DISPONIBLE” sin acentos?**
 Porque se dibuja con las fuentes Hershey de OpenCV, que no representan acentos.
@@ -401,8 +422,9 @@ Es intencional.
 > ⚠️ **Privacidad:** el stream muestra lo que apunte la cámara. Asegurate de no
 > enfocar personas, documentos ni información sensible.
 
-> ⚠️ **Alimentación:** una webcam que consume más corriente de la disponible
-> provoca desconexiones. Usá un hub USB-C alimentado.
+> ⚠️ **Alimentación:** una webcam USB que consume más corriente de la disponible
+> provoca desconexiones. Si se usa webcam, conectarla por un hub USB-C alimentado;
+> el despliegue real usa cámara IP por WiFi.
 
 > ⚠️ **Plantillas:** son el “modelo” del sistema. Si se pierden, hay que
 > reentrenar. Respaldalas.

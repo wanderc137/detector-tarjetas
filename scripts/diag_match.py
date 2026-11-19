@@ -14,7 +14,7 @@ def main():
     tpl_path = sys.argv[1] if len(sys.argv) > 1 else None
     if tpl_path is None:
         files = sorted(glob.glob(
-            "/home/jma/detector-tarjetas/data/templates/raspberry_pi_2/*.npz"
+            "/home/jma/detector-tarjetas/data/templates/raspberry_pi_4/*.npz"
         ))
         tpl_path = files[0] if files else None
     if tpl_path is None:

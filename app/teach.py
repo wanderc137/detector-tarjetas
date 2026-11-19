@@ -66,7 +66,7 @@ class TeachMode:
         normalized = label.strip().lower()
         if not LABEL_PATTERN.match(normalized):
             raise ValueError(
-                "Etiqueta inválida: usá entre 2 y 40 caracteres [a-z0-9_] (ej: arduino_uno_r3)"
+                "Etiqueta inválida: usá entre 2 y 40 caracteres [a-z0-9_] (ej: arduino_uno_r4_wifi)"
             )
         return normalized
 

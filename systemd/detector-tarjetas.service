@@ -1,17 +1,22 @@
 [Unit]
 Description=Detector de tarjetas electronicas (ORB) - Arduino UNO Q
-Documentation=file:/home/arduino/detector-tarjetas/README.md
+Documentation=file:@WORKDIR@/README.md
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=arduino
-WorkingDirectory=/home/arduino/detector-tarjetas
+# Plantilla: scripts/deploy.sh resuelve los placeholders de usuario, grupo,
+# directorio de trabajo y puerto antes de instalar. No copiar tal cual.
+User=@USER@
+Group=@GROUP@
+WorkingDirectory=@WORKDIR@
 Environment=PYTHONUNBUFFERED=1
-Environment=PORT=8000
-Environment=CAMERA_INDEX=0
+Environment=PORT=@PORT@
 Environment=LOG_LEVEL=INFO
+# Variables locales de la instalacion (CAMERA_URL, CAMERA_INDEX, ...).
+# El prefijo '-' permite que el archivo no exista al primer arranque.
+EnvironmentFile=-/etc/default/detector-tarjetas
 ExecStart=/usr/bin/python3 -m app.server
 Restart=always
 RestartSec=3

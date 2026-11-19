@@ -3,10 +3,10 @@
   "use strict";
 
   const FALLBACK_LABELS = {
-    arduino_uno_r3: "Arduino UNO R3",
-    arduino_nano: "Arduino Nano",
-    raspberry_pi_4: "Raspberry Pi 4",
-    raspberry_pi_5: "Raspberry Pi 5",
+    arduino_uno_r4_wifi: "Arduino UNO R4 WiFi",
+    raspberry_pi_4: "Raspberry Pi 4 Model B",
+    arduino_mkr_wifi_1010: "Arduino MKR WiFi 1010",
+    esp32: "ESP32 DevKit V1",
   };
   let LABELS = { ...FALLBACK_LABELS };
   const POLL_HEALTH_MS = 2500;

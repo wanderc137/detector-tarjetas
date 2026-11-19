@@ -18,7 +18,7 @@ estático que consume JSON y un stream MJPEG.
 │  main()                                                                               │
 │   ├── DetectorTarjetasApp                                                             │
 │   │    ├── BoardSpecs(data/boards.json)      caché por (mtime_ns, size)               │
-│   │    ├── CameraCapture (Thread)            V4L2 → last_frame + frame_queue(2)       │
+│   │    ├── CameraCapture (Thread)      URL/FFMPEG o V4L2 → last_frame + queue(2)      │
 │   │    ├── BoardDetector (Thread)            frame_queue → list[Detection]            │
 │   │    └── TeachMode                         data/templates/<label>/*.npz             │
 │   │                                                                                   │
@@ -26,7 +26,7 @@ estático que consume JSON y un stream MJPEG.
 │        └── Handler (uno por conexión)                                                 │
 │             ├── GET  /, /teach, /static/*, /stream.mjpg                               │
 │             ├── GET  /api/{detections,boards,health,teach/samples}                    │
-│             └── POST /api/teach/{capture,reset,reload}                                │
+│             └── POST /api/teach/{capture,reset,reload}, /api/camera                   │
 └───────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -46,7 +46,7 @@ Decisiones estructurales:
 | Archivo | Responsabilidad | Depende de |
 |---|---|---|
 | `app/config.py` | Constantes, rutas y variables de entorno | — |
-| `app/camera.py` | Captura V4L2, reconexión, frame de estado | `config` |
+| `app/camera.py` | Captura URL/FFMPEG o V4L2, reconexión, cambio en caliente, frame de estado | `config` |
 | `app/detector.py` | ORB, matching, homografía, NMS, serialización NPZ | `config` |
 | `app/specs.py` | Carga/validación de `boards.json`, formateo | `config` |
 | `app/teach.py` | Captura/borrado de muestras | `config`, `detector` |
@@ -56,7 +56,7 @@ Decisiones estructurales:
 ### 1.2 Flujo de datos
 
 ```
-V4L2 ──► CameraCapture._publish(frame)
+URL/FFMPEG o V4L2 ──► CameraCapture._publish(frame)
            ├── self._last_frame = frame        (stream MJPEG)
            └── frame_queue.put_nowait(frame)   (detector; reemplaza el viejo)
 
@@ -150,6 +150,8 @@ Todas las constantes y rutas. Las variables de entorno se leen **al importar**:
 | `WEB_DIR` | `BASE_DIR / "web"` | `Path` |
 | `STATIC_DIR` | `WEB_DIR / "static"` | `Path` |
 | `CAMERA_INDEX` | `CAMERA_INDEX` o `0` | `int` |
+| `CAMERA_URL` | `CAMERA_URL` o `""` | `str` |
+| `CAMERA_URL_FILE` | `CAMERA_URL_FILE` o `DATA_DIR/camera_url.txt` | `Path` |
 | `CAMERA_WIDTH` / `CAMERA_HEIGHT` | `640` / `480` | `int` |
 | `CAMERA_FPS_TARGET` | `15` | `int` |
 | `CAMERA_RETRY_DELAY_S` | `2.0` | `float` |
@@ -160,14 +162,14 @@ Todas las constantes y rutas. Las variables de entorno se leen **al importar**:
 | `ORB_PATCH_SIZE` | `31` | `int` |
 | `LOWE_RATIO` | `0.75` | `float` |
 | `MIN_MATCH_COUNT` | `10` | `int` |
-| `MIN_INLIERS` | `15` | `int` |
+| `MIN_INLIERS` | `20` | `int` |
 | `RANSAC_REPROJ_THRESHOLD` | `5.0` | `float` |
-| `SCORE_THRESHOLD` | `0.35` | `float` |
+| `SCORE_THRESHOLD` | `0.60` | `float` |
 | `MIN_BOX_AREA_RATIO` | `0.02` | `float` |
 | `MAX_BOX_AREA_RATIO` | `0.90` | `float` |
 | `NMS_IOU_THRESHOLD` | `0.30` | `float` |
 | `INSTANCE_CENTER_DISTANCE_PX` | `40.0` | `float` |
-| `MAX_INSTANCES_PER_TEMPLATE` | `4` | `int` |
+| `MAX_INSTANCES_PER_TEMPLATE` | `1` (una placa por plantilla; más instancias generaban cajas fantasma) | `int` |
 | `MIN_POLYGON_FILL_RATIO` | `0.20` | `float` |
 | `TEMPLATE_MIN_KEYPOINTS` | `50` | `int` |
 | `TEMPLATE_EXTENSION` | `".npz"` | `str` |
@@ -185,6 +187,18 @@ Todas las constantes y rutas. Las variables de entorno se leen **al importar**:
 > argumento** en los constructores; para cambiarlos en runtime hay que pasarlos
 > explícitamente (`DetectorTarjetasApp(interval_ms=...)`,
 > `TeachMode(min_keypoints=...)`).
+
+### `load_camera_source() -> int | str`
+
+Resuelve la fuente de video al arrancar, con esta precedencia:
+
+1. `data/camera_url.txt` (URL persistida desde la barra “📷 Cámara”).
+2. Variable de entorno `CAMERA_URL`.
+3. Variable de entorno `CAMERA_INDEX` (índice V4L2).
+
+El archivo persistido gana sobre el entorno para que un cambio hecho desde el
+navegador sobreviva a un reinicio del servicio sin editar
+`/etc/default/detector-tarjetas`.
 
 ---
 
@@ -204,7 +218,7 @@ Limpia un label proveniente de un `.npz`:
 4. Devuelve `fallback` si queda vacío.
 
 Motivo histórico (I-01): `np.savez` guarda un array 0-d de Unicode y `str(array)`
-devuelve `"'arduino_uno_r3'"`. Sin esta función, el label no coincidía con los
+devuelve `"'arduino_uno_r4_wifi'"`. Sin esta función, el label no coincidía con los
 IDs de `boards.json`.
 
 #### `create_orb(...) -> cv2.ORB`
@@ -358,11 +372,12 @@ Detalles importantes:
 - `knnMatch` se llama con la **plantilla como query** y el frame como train. Por
   eso `queryIdx` indexa `template.points` y `trainIdx` indexa el subconjunto del
   frame.
-- El consumo por caja (no solo inliers) es lo que permite detectar una segunda
-  copia idéntica: al eliminar todos los keypoints de la primera, el ratio test
-  vuelve a discriminar para la segunda.
-- El margen de 8 px evita dejar keypoints del borde de la placa que generarían
-  una segunda detección espuria sobre la misma instancia.
+- Con `MAX_INSTANCES_PER_TEMPLATE = 1` el bucle hace **un solo intento**: el
+  visor muestra una placa por etiqueta y las copias adicionales se descartan.
+  El consumo por caja (no solo inliers) y el margen de 8 px siguen
+  implementados: si se sube la constante, permiten que el ratio test vuelva a
+  discriminar una segunda copia sin reutilizar keypoints de la primera. Ese modo
+  estuvo activo y generaba cajas fantasma, por eso quedó en 1.
 
 #### `_build_detection(...)`
 
@@ -399,13 +414,16 @@ score          = 0.6*inlier_ratio + 0.3*distance_score + 0.1*area_score
 
 1. Ordena por score descendente.
 2. **NMS**: conserva una detección solo si su IoU con todas las ya conservadas es
-   `<= NMS_IOU_THRESHOLD`.
-3. **Merge**: para detecciones de la misma etiqueta con centros a menos de
-   `INSTANCE_CENTER_DISTANCE_PX` (en píxeles, calculado con `width`/`height`),
+   `<= NMS_IOU_THRESHOLD` (0.30).
+3. **Supresión por contención**: descarta una detección si el centro de una caja
+   de la **misma etiqueta** cae dentro de otra caja ya conservada. Esto elimina
+   la caja grande que a veces envuelve a la placa real.
+4. **Merge**: para detecciones de la misma etiqueta con centros a menos de
+   `INSTANCE_CENTER_DISTANCE_PX` (40 px, calculado con `width`/`height`),
    conserva la de mayor score.
-4. **Agrupa por label**, ordena cada grupo por `(center.x, center.y)` y asigna
+5. **Agrupa por label**, ordena cada grupo por `(center.x, center.y)` y asigna
    `instance_id = 0, 1, 2…`.
-5. Ordena la salida final por score descendente.
+6. Ordena la salida final por score descendente.
 
 ---
 
@@ -417,11 +435,12 @@ Un archivo por **muestra** (no por placa). Una placa puede tener N archivos:
 
 ```
 data/templates/
-├── arduino_uno_r3/
+├── arduino_uno_r4_wifi/
 │   ├── 20261113-101502-123-a1b2c3.npz
 │   └── 20261113-101510-456-d4e5f6.npz
-├── arduino_nano/
-└── raspberry_pi_5/
+├── raspberry_pi_4/
+├── arduino_mkr_wifi_1010/
+└── esp32/
 ```
 
 Nombre generado por `TeachMode.capture`:
@@ -430,12 +449,18 @@ Nombre generado por `TeachMode.capture`:
 <YYYYmmdd-HHMMSS>-<milisegundos 000-999>-<uuid hex 6>.npz
 ```
 
+> **Etiquetas fuera del catálogo**: el detector escanea todas las carpetas de
+> `data/templates/` aunque el label no exista en `data/boards.json`. Esas
+> etiquetas se cargan igual y se muestran sin ficha técnica (caso actual:
+> `raspberry_pi_2`, con 37 muestras históricas, es un **label degradado** que
+> quedó fuera del catálogo de 4 placas). `/api/boards` solo lista el catálogo.
+
 ### 5.2 Inspección
 
 ```python
 import numpy as np
 
-path = "data/templates/arduino_uno_r3/20261113-101502-123-a1b2c3.npz"
+path = "data/templates/arduino_uno_r4_wifi/20261113-101502-123-a1b2c3.npz"
 with np.load(path, allow_pickle=False) as data:
     for key in data.files:
         print(f"{key:12s} {data[key].dtype} {data[key].shape}")
@@ -474,7 +499,7 @@ image_size   int32 (2,)
 
 ```python
 CameraCapture(
-    index=config.CAMERA_INDEX,
+    source=config.load_camera_source(),  # int (índice) o str (URL)
     width=config.CAMERA_WIDTH,
     height=config.CAMERA_HEIGHT,
     fps_target=config.CAMERA_FPS_TARGET,
@@ -483,19 +508,33 @@ CameraCapture(
 )
 ```
 
-Propiedades: `is_open`, `resolution`, `fps`, `last_frame`, `open_attempts`.
+Propiedades: `source` (fuente efectiva), `index` (alias de `source`, se conserva
+por compatibilidad), `is_open`, `resolution`, `fps`, `last_frame`,
+`open_attempts`.
 
 | Método | Comportamiento |
 |---|---|
 | `get_frame()` | Devuelve `_last_frame` bajo lock, sin bloquear |
+| `set_source(source)` | Cambia `int`/`str`, resetea intentos y fuerza reapertura |
 | `stop()` | `join(3 s)`; si sigue vivo, libera la captura y `join(2 s)` |
 | `run()` | Bucle de apertura/lectura/publicación |
-| `_try_open()` | Prueba `CAP_V4L2` y luego `CAP_ANY` |
+| `_try_open()` | URL → `CAP_FFMPEG`; índice → `CAP_V4L2` y fallback `CAP_ANY` |
 | `_release_capture()` | Libera el `VideoCapture` y marca `is_open=False` |
 | `_publish(frame)` | Actualiza `last_frame`, resolución, FPS y encola para el detector |
 | `make_status_frame(message)` | Genera el frame gris con texto |
 
 ### 6.2 Apertura
+
+Para una **URL** (`str`, típicamente `http://<telefono>:8080/video` de IP
+Webcam) se abre con backend `CAP_FFMPEG` y **no** se aplican propiedades V4L2:
+
+```python
+cap = cv2.VideoCapture(source, cv2.CAP_FFMPEG)
+ok, frame = cap.read()
+```
+
+Para un **índice** (`int`) se prueba `CAP_V4L2` y luego `CAP_ANY`, aplicando
+formato MJPG y resolución:
 
 ```python
 cap = cv2.VideoCapture(index, backend)
@@ -509,7 +548,10 @@ ok, frame = cap.read()
 
 Se valida con una lectura real; si falla, se libera y se prueba el siguiente
 backend. Al abrir, se publica el primer frame y se registra el backend usado
-(`V4L2` o `default`) en el log.
+(`FFMPEG`, `V4L2` o `default`) en el log.
+
+La fuente efectiva se muestra en `/api/health` como `camera.index`, y
+`POST /api/camera` la cambia en caliente sin reiniciar el servicio.
 
 ### 6.3 FPS
 
@@ -600,16 +642,16 @@ Lista no vacía de objetos. Campos obligatorios:
 
 | Campo | Tipo | Ejemplo |
 |---|---|---|
-| `id` | string no vacío | `"arduino_uno_r3"` |
-| `name` | string | `"Arduino UNO R3"` |
-| `short_name` | string | `"UNO R3"` |
-| `mcu_soc` | string | `"ATmega328P (AVR 8 bits)"` |
-| `clock_mhz` | número | `16` |
-| `ram_mb` | número | `0.002` |
-| `flash_storage_gb` | número | `3.05e-05` |
+| `id` | string no vacío | `"arduino_uno_r4_wifi"` |
+| `name` | string | `"Arduino UNO R4 WiFi"` |
+| `short_name` | string | `"UNO R4 WiFi"` |
+| `mcu_soc` | string | `"Renesas RA4M1 (ARM Cortex-M4) + ESP32-S3 (WiFi/BLE)"` |
+| `clock_mhz` | número | `48` |
+| `ram_mb` | número | `0.03125` |
+| `flash_storage_gb` | número | `0.000244140625` |
 | `gpio_count` | entero | `20` |
 | `voltage_v` | número | `5` |
-| `connectivity` | lista de strings | `["USB-B","UART"]` |
+| `connectivity` | lista de strings | `["USB-C","WiFi","BLE"]` |
 | `dimensions_mm` | lista de ≥2 números | `[68.6, 53.4]` |
 | `year` | entero | `2012` |
 | `description` | string | texto largo |
@@ -733,12 +775,20 @@ DetectorTarjetasApp(
 | `start()` | `detector.reload_templates()`, `camera.start()`, `detector.start()` |
 | `stop()` | `detector.stop()` y luego `camera.stop()` |
 | `boards_payload()` | Fichas + `formatted` + `summary` |
-| `detection_payload()` | Detecciones + `name`/`short_name`/`summary` |
-| `health_payload()` | Estado completo |
+| `detection_payload()` | Detecciones + `name`/`short_name`/`summary` (degrada si el label no está en `boards.json`) |
+| `health_payload()` | Estado completo, con `camera.index` = fuente efectiva |
+| `set_camera_source(url)` | Persiste la URL en `CAMERA_URL_FILE` y llama a `camera.set_source()` |
 | `build_server(host, port)` | Crea `DetectorHTTPServer` con el handler asociado |
 
 La cámara inyectada debe exponer: `frame_queue`, `is_open`, `resolution`,
-`fps`, `index`, `start()`, `stop()`, `get_frame()`, `make_status_frame()`.
+`fps`, `index`, `start()`, `stop()`, `get_frame()`, `make_status_frame()` y,
+para el cambio en caliente, `set_source()`.
+
+`detection_payload()` busca cada label en `BoardSpecs`. Si existe, agrega
+`name`, `short_name` y `summary`; si no existe (por ejemplo, una plantilla
+histórica `raspberry_pi_2`), devuelve `name = short_name = label` y
+`summary = {}` sin romper la respuesta. La UI dibuja el label y el panel avisa
+que no hay ficha.
 
 ### 9.4 `make_handler(app)`
 
@@ -771,6 +821,7 @@ Helpers:
 | POST | `/api/teach/capture` | `_handle_capture` | 200 / 422 / 400 |
 | POST | `/api/teach/reset` | `_handle_reset` | 200 / 400 |
 | POST | `/api/teach/reload` | `_handle_reload` | 200 / 400 |
+| POST | `/api/camera` | `_handle_set_camera` | 200 / 400 / 500 |
 | OPTIONS | cualquiera | 204 + CORS | — |
 | otro | — | 404 JSON | — |
 
@@ -800,6 +851,12 @@ responde 200/400.
 
 `_handle_reload`: consume el body **solo si** hay `Content-Length` (valida rango),
 recarga y responde `{ok, counts, samples}`. Acepta POST sin body.
+
+`_handle_set_camera`: exige `{"url": "http://..."}` no vacía, valida esquema
+`http`, `https` o `rtsp`, persiste con `set_camera_source()` y responde
+`{ok, source}`. Una URL vacía o con otro esquema devuelve 400 y no cambia la
+fuente; un fallo de escritura devuelve 500. Para volver a una webcam hay que
+editar `CAMERA_INDEX`/borrar `data/camera_url.txt` y reiniciar el servicio.
 
 ### 9.7 Archivos estáticos y seguridad de rutas
 
@@ -862,7 +919,7 @@ desconectarse el cliente se captura `BrokenPipeError`/`ConnectionResetError`/
 | `web/teach.html` | Estructura del modo enseñar: preview, 3 tarjetas de controles |
 | `web/static/app.js` | Polling, dibujo de cajas/globos, panel, reconexión |
 | `web/static/teach.js` | Captura, recarga, borrado, conteos |
-| `web/static/style.css` | Tema cómic oscuro, sin CDNs ni fuentes externas |
+| `web/static/style.css` | Tema oscuro sobrio con acentos dorados, sin CDNs ni fuentes externas |
 
 ### 10.2 `app.js`
 
@@ -879,9 +936,12 @@ const state = {
 };
 ```
 
-Constantes: `FONT` (pila de tipografías cómic del sistema), `COLOR_BOX =
-"#00ff3c"`, `COLOR_INK = "#111111"`, `COLOR_BUBBLE = "#ffffff"`,
-`POLL_DETECTIONS_MS = 250`, `POLL_HEALTH_MS = 2000`.
+Constantes actuales de campo: `COLOR_BOX = "#c9a35a"` (dorado),
+`COLOR_INK = "#191919"`, `COLOR_BUBBLE = "#f3efe6"` y sombra
+`rgba(201,163,90,.55)`; `POLL_DETECTIONS_MS = 250`, `POLL_HEALTH_MS = 2000`.
+El suavizado usa `SMOOTH_WINDOW = 9`, `SMOOTH_ALPHA = 0.15`, `DEADBAND = 18`,
+`FLIP_MARGIN = 20`, `GAP = 34` y una gracia de 1500 ms antes de ocultar el
+globo.
 
 Funciones principales:
 
@@ -889,7 +949,7 @@ Funciones principales:
 |---|---|
 | `syncCanvas()` | Ajusta `canvas.width/height` al tamaño CSS × `min(devicePixelRatio, 2)` |
 | `summaryLines(detection)` | `[short_name, "MCU: …", "RAM: …", "Reloj: …"]` (máx. 3 claves) |
-| `drawBox(detection, cw, ch)` | Recuadro con glow y esquinas; devuelve el rect en px CSS |
+| `drawBox(detection, cw, ch)` | Marco dorado con esquinas de visor (5 px si está seleccionado); devuelve el rect en px CSS |
 | `drawBubble(detection, box, lines, cw, ch, occupied)` | Globo + colita; evita solapamientos |
 | `draw()` | Limpia el canvas y dibuja todas las detecciones |
 | `openPanel(label)` | Rellena y muestra el panel lateral |
@@ -905,8 +965,10 @@ Detalles de dibujo:
   por `cw`/`ch` (tamaño CSS), no por el tamaño físico del canvas.
 - `ctx.setTransform(dpr, 0, 0, dpr, 0, 0)` para dibujar en píxeles CSS.
 - El globo se coloca arriba si hay lugar (`box.y - height - 14 >= 4`), si no
-  abajo; si se sale por abajo, vuelve arriba. Hasta 4 intentos de desplazamiento
-  vertical para no chocar con globos ya dibujados.
+  abajo; si se sale por abajo, vuelve arriba. Se desplaza verticalmente para no
+  chocar con globos ya dibujados (`GAP = 34`, `FLIP_MARGIN = 20`).
+- La posición se estabiliza con mediana de 9 cuadros, EMA 0.15 y zona muerta de
+  18 px; tras 1500 ms sin detección se oculta el globo.
 - La colita es un triángulo con vértice en el borde de la caja, recortado a 4 px
   de los extremos.
 - El hit-test recorre primero los globos (en orden inverso) y después las cajas.
@@ -931,10 +993,9 @@ recarga `src` con `?t=Date.now()` para evitar caché.
 Variables principales:
 
 ```css
---bg:#1a1a1a; --bg-soft:#232323; --panel:#fff; --ink:#111;
---green:#00ff3c; --green-dark:#00c22d; --accent:#ffd60a; --danger:#ff5d5d;
---border:3px solid #000; --radius:14px;
---comic-font:"Comic Sans MS","Comic Neue","Chalkboard SE","Segoe Print",...;
+--bg:#17171b; --bg-soft:#202026; --panel:#f3efe6; --ink:#191919;
+--green:#c9a35a; --green-dark:#a8853f; --accent:#c9a35a; --danger:#c0504d;
+--border:1px solid rgba(201,163,90,.35); --radius:10px;
 --mono-font:"JetBrains Mono","Fira Code","DejaVu Sans Mono",monospace;
 ```
 
@@ -961,7 +1022,7 @@ funcione sin instalar el paquete.
 
 | Helper | Uso |
 |---|---|
-| `make_texture(seed, width, height, background)` | Imagen sintética con formas y texto (“UNO R3”, “ATmega328P”, “ARDUINO”) |
+| `make_texture(seed, width, height, background)` | Imagen sintética con formas y texto (“UNO R4”, “RA4M1”, “ARDUINO”) |
 | `write_template(root, label, image, name)` | Extrae ORB y guarda un `.npz` |
 | `make_scene(width, height, background)` | Fondo oscuro uniforme |
 | `place_texture(scene, texture, center, scale, angle, brightness)` | Rota/escala/pega la textura |
@@ -1093,7 +1154,7 @@ LOG_LEVEL=DEBUG python -m app.server
 El formato incluye hora, nivel, nombre del hilo y logger:
 
 ```
-2026-11-13 10:15:02,123 INFO [board-detector] app.detector: Plantillas recargadas: {'arduino_uno_r3': 8}
+2026-11-13 10:15:02,123 INFO [board-detector] app.detector: Plantillas recargadas: {'arduino_uno_r4_wifi': 8}
 ```
 
 En la UNO Q:
@@ -1139,7 +1200,7 @@ Si no detecta:
 
 ```python
 import numpy as np
-path = "data/templates/arduino_uno_r3/<archivo>.npz"
+path = "data/templates/arduino_uno_r4_wifi/<archivo>.npz"
 with np.load(path, allow_pickle=False) as data:
     print(data.files)
     print(data["label"].item())
@@ -1214,18 +1275,27 @@ de `knnMatch`/`findHomography`.
 - Empaqueta con `tar` y excluye `.venv`, `venv`, `.git`, `__pycache__`,
   `.pytest_cache`, `PLAN.md`, `AUDIT_REPORT.md`, `data/templates/*`.
 - Instala dependencias con `sudo -n`; si no hay sudo sin contraseña, sale con 3.
-- Instala la unidad systemd con `sed` sobre `User`, `WorkingDirectory`, `PORT`.
-- Verifica `/api/health` con `curl` o `urllib`.
-- `--via-adb` usa `adb push`/`adb shell` y sigue el mismo esquema.
+- Instala la unidad systemd renderizando los placeholders `@USER@`, `@GROUP@`,
+  `@WORKDIR@` y `@PORT@`.
+- Siembra `/etc/default/detector-tarjetas` **solo si no existe**; un redeploy
+  nunca pisa `CAMERA_URL`/`CAMERA_INDEX` de la placa.
+- Ejecuta `systemctl daemon-reload`, `enable` y `restart`; después verifica
+  `is-enabled` = `enabled`, `is-active` = `active` y `/api/health`.
+- `--via-adb --adb-serial <serial>` usa `adb push`/`adb shell` y sigue el mismo
+  esquema (validando el serial con `[A-Za-z0-9_.:-]`).
 
-Códigos de salida: `2` SSH, `3` sudo, `4` adb ausente, `5` health.
+Códigos de salida: `2` SSH, `3` sudo/servicio no habilitado, `4` adb ausente,
+`5` health, `6` unidad existente con User/Group/Workdir distintos.
 
 ### 14.4 Unidad systemd
 
 `systemd/detector-tarjetas.service` usa `/usr/bin/python3 -m app.server`,
 `Restart=always`, `RestartSec=3`, `SupplementaryGroups=video`,
-`NoNewPrivileges=true`, `PrivateTmp=true`. El despliegue reemplaza usuario,
-directorio y puerto.
+`NoNewPrivileges=true`, `PrivateTmp=true` y
+`EnvironmentFile=-/etc/default/detector-tarjetas`. El despliegue reemplaza
+usuario, directorio y puerto, y deja la unidad `enabled` para que arranque con
+la placa. `systemd/detector-tarjetas.env.example` documenta las variables
+`CAMERA_URL`, `CAMERA_INDEX`, `PORT` y `LOG_LEVEL`.
 
 ---
 
@@ -1236,12 +1306,12 @@ directorio y puerto.
 | Detección | ORB + homografía | Liviano y sin modelos; requiere enseñar y tolera menos escala extrema |
 | Plantillas | Una por captura, sin promedio | Simple y robusto a variaciones; más archivos y más costo de matching |
 | Matching | Ratio test 0.75 + RANSAC | Buen filtrado de falsos positivos; puede perder placas muy ocluidas |
-| Multinstancia | Consumo de keypoints por caja | Permite copias idénticas; puede consumir keypoints de una placa vecina |
+| Instancias | `MAX_INSTANCES_PER_TEMPLATE = 1` | Una placa por etiqueta, sin cajas fantasma; no distingue dos copias iguales |
 | Cajas | Normalizadas | Frontend independiente de la resolución; se pierde precisión absoluta |
 | HTTP | `ThreadingHTTPServer` | Sin dependencias; menos features que un framework |
 | Estado | En memoria, sin base de datos | Simple; se pierde historial al reiniciar |
 | Teach | Recarga en caliente tras cada captura | Feedback inmediato; puede costar con muchas plantillas |
-| Frontend | Canvas 2D | Control total del estilo cómic; sin accesibilidad avanzada |
+| Frontend | Canvas 2D | Control total del estilo visual; sin accesibilidad avanzada |
 | Seguridad | LAN de confianza, sin auth | Cero fricción; no apto para internet |
 
 ### 15.1 Desviaciones respecto de `PLAN.md`
