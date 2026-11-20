@@ -142,6 +142,12 @@ def test_health_endpoint_with_camera(server: ServerHarness) -> None:
     assert payload["status"] == "ok"
     assert payload["camera"]["present"] is True
     assert payload["camera"]["resolution"] == [640, 480]
+    assert payload["scan_quad"] == [
+        [0.1762, 0.2962],
+        [0.6477, 0.2962],
+        [0.6477, 0.6499],
+        [0.1762, 0.6499],
+    ]
     assert payload["templates"]["count"] == 0
     assert set(payload["templates"]["by_label"]).issuperset(
         {"arduino_uno_r4_wifi", "raspberry_pi_4", "arduino_mkr_wifi_1010", "esp32"}

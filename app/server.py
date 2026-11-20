@@ -211,6 +211,9 @@ class DetectorTarjetasApp:
                 "fps": float(getattr(self.camera, "fps", 0.0)),
                 "index": getattr(self.camera, "source", getattr(self.camera, "index", config.CAMERA_INDEX)),
             },
+            "scan_quad": [
+                [float(x), float(y)] for x, y in config.SCAN_QUAD
+            ],
             "templates": {
                 "count": int(sum(counts.values())),
                 "labels": labels_with_samples,

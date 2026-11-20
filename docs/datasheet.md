@@ -251,11 +251,13 @@ El script crea `.venv`, instala `requirements-dev.txt` y arranca el servidor.
 
 ### 5.2 Detección
 
-1. Apuntar la cámara a una placa entrenada.
+1. Apuntar la cámara a la hoja y colocar la placa **dentro del marco amarillo**
+   (área de escaneo, delimitada por las cuatro marcas en T).
 2. Esperar a que aparezca el marco dorado (≤ 1 s en condiciones normales).
 3. Leer el globo: nombre corto, MCU, RAM y reloj.
 4. Hacer clic en la placa o el globo para ver la ficha completa.
-5. Cerrar el panel con `×` o `Esc`.
+5. Cerrar el panel con `×` o `Esc`. También se cierra solo si la placa
+   seleccionada deja de detectarse durante ~2 s (por ejemplo, al retirarla).
 
 Los valores exactos que muestra el globo para el catálogo vigente son:
 
@@ -273,12 +275,22 @@ globo muestra el `label` como título y el panel avisa que no hay ficha técnica
 
 | Señal | Significado |
 |---|---|
+| Marco amarillo fino (`#FFD400`) | Área de escaneo: la placa debe quedar dentro; visible siempre |
 | Marco dorado fino | Detección con score suficiente |
 | Marco dorado grueso + brillo | Placa seleccionada (ficha abierta) |
 | Globo arriba de la placa | Espacio libre suficiente arriba |
 | Globo abajo de la placa | Se ubicó abajo por falta de espacio |
 | Globo desplazado | Se movió para no pisar otro globo |
 | Sin marco | No hay plantilla, score bajo, o placa fuera de encuadre |
+| Panel se cierra solo | La placa seleccionada dejó de aparecer ~2 s |
+
+Solo se muestran detecciones cuya tarjeta esté **mayormente dentro del área de
+escaneo**: el servidor exige que al menos el 80 % del área proyectada caiga
+dentro del cuadrilátero amarillo (`MIN_VISIBLE_QUAD_RATIO`). Además, ORB solo
+analiza keypoints dentro de ese cuadrilátero, tanto del frame como de las
+plantillas. Así se evitan falsos positivos de fondo cuando la tarjeta no está
+presente. El cuadrilátero por defecto coincide con las puntas internas de las
+marcas en T y se puede calibrar con `SCAN_QUAD`.
 
 ### 5.4 Modo enseñar
 

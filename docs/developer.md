@@ -152,7 +152,7 @@ Todas las constantes y rutas. Las variables de entorno se leen **al importar**:
 | `CAMERA_INDEX` | `CAMERA_INDEX` o `0` | `int` |
 | `CAMERA_URL` | `CAMERA_URL` o `""` | `str` |
 | `CAMERA_URL_FILE` | `CAMERA_URL_FILE` o `DATA_DIR/camera_url.txt` | `Path` |
-| `CAMERA_WIDTH` / `CAMERA_HEIGHT` | `640` / `480` | `int` |
+| `CAMERA_WIDTH` / `CAMERA_HEIGHT` | `640` / `480` (fallback/negociación; la calibración de `DEFAULT_SCAN_QUAD` asume frame portrait **480×640**) | `int` |
 | `CAMERA_FPS_TARGET` | `15` | `int` |
 | `CAMERA_RETRY_DELAY_S` | `2.0` | `float` |
 | `FRAME_QUEUE_SIZE` | `2` | `int` |
@@ -167,6 +167,8 @@ Todas las constantes y rutas. Las variables de entorno se leen **al importar**:
 | `SCORE_THRESHOLD` | `0.60` | `float` |
 | `MIN_BOX_AREA_RATIO` | `0.02` | `float` |
 | `MAX_BOX_AREA_RATIO` | `0.90` | `float` |
+| `MIN_VISIBLE_QUAD_RATIO` | `0.80` (fracción mínima del quad proyectado dentro del cuadrilátero de escaneo) | `float` |
+| `SCAN_QUAD` / `DEFAULT_SCAN_QUAD` | 4 puntos normalizados TL, TR, BR, BL; default `(0.1762,0.2962)`, `(0.6477,0.2962)`, `(0.6477,0.6499)`, `(0.1762,0.6499)`: cuadrado de 226×226 px centrado en las T, calibrado para frame portrait **480×640** | `tuple[tuple[float, float], ...]` |
 | `NMS_IOU_THRESHOLD` | `0.30` | `float` |
 | `INSTANCE_CENTER_DISTANCE_PX` | `40.0` | `float` |
 | `MAX_INSTANCES_PER_TEMPLATE` | `1` (una placa por plantilla; más instancias generaban cajas fantasma) | `int` |
@@ -389,7 +391,10 @@ clamp a [0, image_size]
 corners = [(x0,y0),(x1,y0),(x1,y1),(x0,y1)]
 projected = perspectiveTransform(corners, H)
 si no finito → None
-polygon_area = |contourArea(projected)|
+quad_area = |contourArea(projected)|
+visible_area = intersectConvexConvex(projected, cuadrilátero SCAN_QUAD)
+si quad_area <= 0 o visible_area/quad_area < MIN_VISIBLE_QUAD_RATIO → None  # fuera del área
+polygon_area = quad_area
 bx,by,bw,bh = boundingRect(projected)
 si bw <= 1 o bh <= 1 → None
 si polygon_area < MIN_POLYGON_FILL_RATIO * bw * bh → None   # homografía degenerada
@@ -409,6 +414,22 @@ distance_score = clamp(1 - mean(distances de inliers)/90, 0, 1)
 area_score     = min(1, (area_ratio / MIN_BOX_AREA_RATIO) * 0.5)
 score          = 0.6*inlier_ratio + 0.3*distance_score + 0.1*area_score
 ```
+
+> **Área de escaneo y filtro de visibilidad (ciclo 2).** `SCAN_QUAD` define el
+> cuadrilátero donde se apoya la tarjeta, con los cuatro puntos normalizados en
+> orden TL, TR, BR, BL. Por defecto son las puntas internas de las marcas en T
+> de la hoja de calibración; se puede sobrescribir con
+> `SCAN_QUAD="x1,y1,x2,y2,x3,y3,x4,y4"`. `detect_frame` recorta el frame al
+> bounding box del quad para ORB y luego descarta los keypoints que no caen
+> dentro del polígono (`points_in_scan_quad`); las coordenadas se mantienen en
+> el sistema full-frame. `_match_template` aplica el mismo filtro a los
+> keypoints de cada plantilla y, si quedan menos de `MIN_MATCH_COUNT`, la salta.
+> Antes de calcular área/score se exige que al menos
+> `MIN_VISIBLE_QUAD_RATIO` (0.80) del área del quad proyectado caiga dentro del
+> cuadrilátero (`cv2.intersectConvexConvex`). Esto descarta los falsos positivos
+> de fondo: las plantillas capturadas a frame completo incluyen la hoja/brazo
+> estático y la homografía puede proyectar el quad sobre las T o fuera del
+> área aunque la placa no esté presente. El resto del scoring no cambió.
 
 #### `_postprocess(candidates, frame_size)`
 
@@ -931,29 +952,36 @@ const state = {
   detections: [],         // última respuesta de /api/detections
   bubbles: [],            // rectángulos de globos para hit-testing
   selectedLabel: null,
+  selectedMissingPolls: 0, // polls consecutivos sin el label seleccionado
   health: null,
   dpr: 1,
 };
 ```
 
 Constantes actuales de campo: `COLOR_BOX = "#c9a35a"` (dorado),
-`COLOR_INK = "#191919"`, `COLOR_BUBBLE = "#f3efe6"` y sombra
+`COLOR_INK = "#191919"`, `COLOR_BUBBLE = "#f3efe6"`,
+`COLOR_SCAN_QUAD = "#FFD400"` (marco del área de escaneo) y sombra
 `rgba(201,163,90,.55)`; `POLL_DETECTIONS_MS = 250`, `POLL_HEALTH_MS = 2000`.
 El suavizado usa `SMOOTH_WINDOW = 9`, `SMOOTH_ALPHA = 0.15`, `DEADBAND = 18`,
 `FLIP_MARGIN = 20`, `GAP = 34` y una gracia de 1500 ms antes de ocultar el
-globo.
+globo. El auto-cierre del panel usa `MISSING_POLLS_TO_CLOSE = 8` (~2 s).
+`drawScanQuad` dibuja el polígono amarillo fino (`lineWidth = 2`, sin relleno)
+con los puntos de `health.scan_quad`, antes del early-return por “sin
+detecciones”: el marco queda visible siempre que haya stream.
 
 Funciones principales:
 
 | Función | Descripción |
 |---|---|
 | `syncCanvas()` | Ajusta `canvas.width/height` al tamaño CSS × `min(devicePixelRatio, 2)` |
+| `drawScanQuad(cw, ch)` | Polígono amarillo `#FFD400` del área de escaneo, sin relleno, con etiqueta “ÁREA DE ESCANEO” |
 | `summaryLines(detection)` | `[short_name, "MCU: …", "RAM: …", "Reloj: …"]` (máx. 3 claves) |
 | `drawBox(detection, cw, ch)` | Marco dorado con esquinas de visor (5 px si está seleccionado); devuelve el rect en px CSS |
 | `drawBubble(detection, box, lines, cw, ch, occupied)` | Globo + colita; evita solapamientos |
 | `draw()` | Limpia el canvas y dibuja todas las detecciones |
 | `openPanel(label)` | Rellena y muestra el panel lateral |
 | `closePanel()` | Oculta el panel y limpia la selección |
+| `trackSelectedPresence()` | Cuenta polls sin el label abierto y cierra el panel a los 8 (~2 s) |
 | `loadBoards()` | `GET /api/boards` → `Map` |
 | `applyHealth(health)` | Banners, píldora, ms de inferencia y contadores |
 | `pollDetections()` | `GET /api/detections` y `setTimeout` encadenado |
@@ -972,6 +1000,11 @@ Detalles de dibujo:
 - La colita es un triángulo con vértice en el borde de la caja, recortado a 4 px
   de los extremos.
 - El hit-test recorre primero los globos (en orden inverso) y después las cajas.
+- Auto-cierre del panel: tras cada poll exitoso, `trackSelectedPresence()`
+  incrementa `selectedMissingPolls` si el `label` abierto no está en
+  `state.detections`; a los 8 polls (~2 s) llama a `closePanel()`. El contador se
+  reinicia en `openPanel()`, cuando el label reaparece y en `closePanel()`. Un
+  error de red no incrementa el contador.
 
 Reconexión del stream: en `error`, muestra “Reconectando stream…”, espera 1.5 s y
 recarga `src` con `?t=Date.now()` para evitar caché.

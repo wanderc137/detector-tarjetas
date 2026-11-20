@@ -12,8 +12,20 @@
   const COLOR_INK = "#191919";
   const COLOR_BUBBLE = "#f3efe6";
   const COLOR_BUBBLE_SHADOW = "rgba(201, 163, 90, 0.55)";
+  const COLOR_SCAN_QUAD = "#FFD400";
+  const SCAN_QUAD_LABEL = "ÁREA DE ESCANEO";
+  // Fallback del área de escaneo (mismas coordenadas que DEFAULT_SCAN_QUAD de
+  // app/config.py) para dibujar el marco desde el primer frame, antes de que
+  // llegue /api/health. Cuando health responde, se usa el quad del servidor.
+  const DEFAULT_SCAN_QUAD = [
+    [0.1762, 0.2962],
+    [0.6477, 0.2962],
+    [0.6477, 0.6499],
+    [0.1762, 0.6499],
+  ];
   const POLL_DETECTIONS_MS = 250;
   const POLL_HEALTH_MS = 2000;
+  const MISSING_POLLS_TO_CLOSE = 8; // ~2 s sin el label seleccionado → cerrar panel
   const SMOOTH_WINDOW = 9;  // frames de historia para la mediana (rechaza saltos)
   const SMOOTH_ALPHA = 0.15; // 0..1: cuánto sigue el globo a la mediana
   const DEADBAND = 18;      // px: por debajo de esto el globo queda congelado
@@ -40,6 +52,7 @@
     detections: [],
     bubbles: [],
     selectedLabel: null,
+    selectedMissingPolls: 0,
     health: null,
     dpr: 1,
     smoothed: new Map(),
@@ -85,6 +98,45 @@
 
   function intersects(a, b) {
     return !(a.x + a.w < b.x || b.x + b.w < a.x || a.y + a.h < b.y || b.y + b.h < a.y);
+  }
+
+  function drawScanQuad(cw, ch) {
+    // Marco fijo del área donde apoyar la tarjeta: cuadrilátero amarillo fino,
+    // sin relleno, alineado con las cuatro marcas en T de la hoja. Se dibuja
+    // siempre (haya o no detecciones) usando la misma escala que las cajas.
+    // Hasta que llega /api/health se usa DEFAULT_SCAN_QUAD para que el marco
+    // aparezca desde el primer frame; luego manda el valor del servidor.
+    const healthQuad = state.health && state.health.scan_quad;
+    const quad = Array.isArray(healthQuad) && healthQuad.length >= 3
+      ? healthQuad
+      : DEFAULT_SCAN_QUAD;
+    const points = quad.map((point) => ({
+      x: Number(point[0]) * cw,
+      y: Number(point[1]) * ch,
+    }));
+    if (points.some((point) => !Number.isFinite(point.x) || !Number.isFinite(point.y))) {
+      return;
+    }
+
+    ctx.save();
+    ctx.strokeStyle = COLOR_SCAN_QUAD;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let index = 1; index < points.length; index += 1) {
+      ctx.lineTo(points[index].x, points[index].y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+
+    const topLeft = points[0];
+    ctx.font = `12px ${FONT}`;
+    ctx.textBaseline = "bottom";
+    ctx.fillStyle = COLOR_SCAN_QUAD;
+    const labelY = topLeft.y > 18 ? topLeft.y - 6 : topLeft.y + 16;
+    ctx.fillText(SCAN_QUAD_LABEL, Math.max(2, topLeft.x), labelY);
+    ctx.restore();
   }
 
   // ------------------------------------------------------------- canvas size
@@ -308,7 +360,9 @@
     ctx.clearRect(0, 0, cw, ch);
 
     state.bubbles = [];
-    if (!stream.naturalWidth || !state.detections.length) return;
+    if (!stream.naturalWidth) return;
+    drawScanQuad(cw, ch);
+    if (!state.detections.length) return;
 
     const occupied = [];
     const seen = new Set();
@@ -333,6 +387,7 @@
   function openPanel(label) {
     const board = state.boards.get(label);
     state.selectedLabel = label;
+    state.selectedMissingPolls = 0;
     draw();
     if (!board) {
       panelContent.innerHTML = `<h2>${escapeHtml(label)}</h2>
@@ -380,6 +435,7 @@
 
   function closePanel() {
     state.selectedLabel = null;
+    state.selectedMissingPolls = 0;
     panel.classList.add("hidden");
     draw();
   }
@@ -492,6 +548,28 @@
       const loaded = templates.loaded ? Object.keys(templates.loaded).length : 0;
       footerStats.textContent = `${state.detections.length} detección(es) · ${templates.count || 0} muestra(s) · ${loaded} etiqueta(s) entrenada(s)`;
     }
+    // El marco del área de escaneo depende de /api/health; se redibuja apenas
+    // llega para que aparezca antes de la primera detección.
+    draw();
+  }
+
+  function trackSelectedPresence() {
+    // Auto-cierre del panel: si el label seleccionado deja de aparecer en el
+    // último poll exitoso durante ~2 s (8 polls de 250 ms), se cierra la ficha.
+    // No se cuenta un error de red: un fallo transitorio no debe cerrar nada.
+    if (!state.selectedLabel) {
+      state.selectedMissingPolls = 0;
+      return;
+    }
+    const present = state.detections.some((d) => d.label === state.selectedLabel);
+    if (present) {
+      state.selectedMissingPolls = 0;
+      return;
+    }
+    state.selectedMissingPolls += 1;
+    if (state.selectedMissingPolls >= MISSING_POLLS_TO_CLOSE) {
+      closePanel();
+    }
   }
 
   async function pollDetections() {
@@ -500,6 +578,7 @@
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       state.detections = Array.isArray(data.detections) ? data.detections : [];
+      trackSelectedPresence();
       draw();
     } catch (error) {
       state.detections = [];

@@ -49,6 +49,9 @@ apuntando la cámara a cada placa.
 
 La escena se dibuja en un `<canvas>` superpuesto al stream MJPEG:
 
+- un **marco amarillo fino y fijo** (`#FFD400`) que delimita el **área de
+  escaneo** donde se debe apoyar la tarjeta; coincide con las marcas en T de la
+  hoja y se ve aunque no haya detecciones;
 - un **marco dorado con esquinas de visor** alrededor de la placa detectada;
 - un **globo** con el nombre corto y tres datos: **MCU, RAM y reloj**;
 - un **panel lateral** con la ficha completa al hacer clic en la placa o el globo.
@@ -168,6 +171,12 @@ Muestra `name`, `id`, `year`, la tabla de `formatted()` y la descripción:
 La conectividad se muestra como una lista separada por comas y, si la ficha
 tiene `urls`, aparece el enlace “Documentación ↗” a la página oficial.
 
+El panel se cierra solo: si la etiqueta abierta deja de aparecer en
+`/api/detections` durante ~2 s (8 polls de 250 ms), la ficha se oculta y el
+visor vuelve a mostrar únicamente el stream. El contador se reinicia si la
+etiqueta reaparece antes del plazo, y no cuenta errores de red. También se
+cierra con la ✕ o con `Esc`.
+
 ### Contrato de `/api/detections`
 
 Cada detección lleva la etiqueta, el score, la caja normalizada y los datos de la
@@ -278,9 +287,35 @@ score = 0.60 * inlier_ratio
 ```
 
 Se publica solo si `score ≥ 0.60`, la caja ocupa entre **2 % y 90 %** del frame,
-el polígono proyectado llena al menos **20 %** de su bounding box y la caja tiene
-al menos 8×8 px. Después se aplica NMS (IoU > 0.30) y se agrupan centros a menos
-de 40 px.
+el polígono proyectado llena al menos **20 %** de su bounding box, al menos el
+**80 %** del área del quad proyectado cae **dentro del área de escaneo** y la
+caja tiene al menos 8×8 px. El área de escaneo es el cuadrilátero amarillo que
+se dibuja siempre sobre el video: por defecto es un **cuadrado de 226×226 px**
+centrado en las puntas internas de las cuatro marcas en T de la hoja de
+calibración (`SCAN_QUAD` = TL `(0.1762,0.2962)`, TR `(0.6477,0.2962)`, BR
+`(0.6477,0.6499)`, BL `(0.1762,0.6499)`; configurable por env). ORB solo analiza
+keypoints dentro de ese polígono —tanto del frame como de las plantillas—, y el
+filtro de visibilidad (`MIN_VISIBLE_QUAD_RATIO = 0.80`) exige que el quad
+proyectado caiga dentro del mismo. Así se descartan los falsos positivos de
+fondo: cuando la tarjeta no está, el matcher puede reconocer la hoja/brazo
+estático de las plantillas y proyectar un quad sobre las T o fuera del área.
+
+> **La calibración asume un frame portrait 480×640** (ancho 480, alto 640):
+> solo con esa orientación el quad normalizado mide 226×226 px. Las constantes
+> `CAMERA_WIDTH`/`CAMERA_HEIGHT` (640×480) son **fallback/negociación**, no una
+> garantía: si la fuente entrega otra resolución (por ejemplo 640×480
+> landscape), el área de escaneo se deforma (~302×170 px) y deja de coincidir
+> con las marcas en T. En ese caso hay que ajustar `SCAN_QUAD` (o el ROI) o
+> rotar/reconfigurar la cámara para volver a portrait 480×640.
+
+> **Plantillas y cambios del área de escaneo (I-05).** Las plantillas
+> históricas se capturaron con el cuadrilátero vigente en su momento. Si cambia
+> `SCAN_QUAD`, `_filter_template_scan_quad` conservará solo los keypoints de
+> cada plantilla que caigan dentro del área nueva: pueden perderse keypoints
+> útiles o conservarse fondo que antes quedaba dentro. Es esperable y no se
+> borran plantillas automáticamente; si la detección se degrada tras un cambio
+> de área, recapturá muestras nuevas con la tarjeta dentro del recuadro.
+Después se aplica NMS (IoU > 0.30) y se agrupan centros a menos de 40 px.
 
 `MAX_INSTANCES_PER_TEMPLATE = 1`: el visor muestra **una placa a la vez**. Más de
 una instancia por plantilla generaba cajas fantasma por descriptores sobrantes
@@ -294,6 +329,15 @@ normalizadas `[0,1]`; el canvas las escala al tamaño CSS de la imagen. El globo
 estabiliza con mediana sobre 9 frames, EMA de 0.15, zona muerta de 18 px,
 histéresis de 20 px y gracia de 1500 ms para que no parpadee. Si no hay espacio
 arriba, se dibuja abajo; si choca con otro globo, se desplaza.
+
+El marco del área de escaneo se dibuja en cada `draw()` con los cuatro puntos de
+`scan_quad` que expone `/api/health`, usando la misma transformación que las
+cajas. Mientras la primera respuesta de health está en camino, `app.js` usa el
+fallback `DEFAULT_SCAN_QUAD` con las mismas coordenadas, de modo que el marco
+aparece desde el primer frame. Como se pinta antes del retorno temprano por
+“sin detecciones”, permanece visible aunque la lista esté vacía; el panel se
+cierra solo a los 8 polls sin la
+etiqueta seleccionada (~2 s).
 
 ### ¿Por qué no usa modelos externos?
 
@@ -606,6 +650,7 @@ Cada captura:
 | Se confunde con otra placa | Añadir muestras discriminativas (conectores, serigrafía) |
 | Detección inestable | Mejorar luz, evitar reflejos, acercar la cámara |
 | Cambió la cámara o la luz | Reentrenar las 4 etiquetas |
+| Cambió el área de escaneo (`SCAN_QUAD`) | Las plantillas históricas pueden requerir recaptura con la tarjeta dentro del recuadro nuevo; no borrar muestras sin respaldar `data/templates/` |
 
 ### Borrado
 

@@ -5,12 +5,46 @@ from __future__ import annotations
 import queue
 from pathlib import Path
 
+import cv2
 import numpy as np
 import pytest
 
 from app import config
-from app.detector import BoardDetector, box_iou, normalize_label
+from app.detector import (
+    BoardDetector,
+    Template,
+    box_iou,
+    normalize_label,
+    points_in_scan_quad,
+    scan_quad_bbox,
+    scan_quad_pixels,
+)
 from tests.helpers import make_scene, make_texture, place_texture, write_template
+
+
+@pytest.fixture(autouse=True)
+def full_frame_scan_quad(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Los tests sintéticos usan coordenadas arbitrarias: área = frame completo."""
+    monkeypatch.setattr(
+        config,
+        "SCAN_QUAD",
+        ((0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)),
+    )
+
+
+@pytest.fixture()
+def default_scan_quad(
+    full_frame_scan_quad: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Restaura el cuadrado calibrado (226×226 px en frame portrait 480×640).
+
+    El fixture autouse ``full_frame_scan_quad`` deja ``SCAN_QUAD`` como el frame
+    completo para el resto de los tests sintéticos. Los tests de visibilidad
+    necesitan el quad real para ejercitar ``MIN_VISIBLE_QUAD_RATIO`` contra el
+    área de escaneo calibrada (I-01); depende de ``full_frame_scan_quad`` para
+    que el override se aplique siempre después.
+    """
+    monkeypatch.setattr(config, "SCAN_QUAD", config.DEFAULT_SCAN_QUAD)
 
 
 @pytest.fixture(scope="module")
@@ -71,6 +105,173 @@ def test_unrelated_texture_is_rejected(detector: BoardDetector) -> None:
     place_texture(scene, unrelated, center=(320, 240), scale=0.9, angle=3.0)
 
     assert detector.detect_frame(scene) == []
+
+
+def _translation_homography(dx: float, dy: float) -> np.ndarray:
+    """Homografía sintética de traslación en píxeles."""
+    return np.array([[1.0, 0.0, dx], [0.0, 1.0, dy], [0.0, 0.0, 1.0]], dtype=np.float64)
+
+
+def _synthetic_template(label: str = "sintetica", width: int = 200, height: int = 150) -> Template:
+    """Plantilla mínima para ejercitar ``_build_detection`` sin ORB."""
+    points = np.float32(
+        [[10, 10], [90, 10], [190, 10], [10, 75], [190, 75], [10, 140], [90, 140], [190, 140]]
+    )
+    return Template(
+        label=label,
+        path=Path("sintetica.npz"),
+        points=points,
+        descriptors=np.zeros((len(points), 32), dtype=np.uint8),
+        image_size=(width, height),
+        keypoints=[],
+    )
+
+
+def _build_synthetic_detection(
+    detector: BoardDetector,
+    dx: float,
+    dy: float,
+    frame_size: tuple[int, int] = (640, 480),
+):
+    """Proyecta el rectángulo de la plantilla con una traslación conocida."""
+    template = _synthetic_template()
+    src = template.points
+    good = [
+        cv2.DMatch(_queryIdx=index, _trainIdx=index, _distance=18.0)
+        for index in range(len(src))
+    ]
+    inlier_mask = np.ones(len(src), dtype=bool)
+    return detector._build_detection(
+        template=template,
+        good=good,
+        inlier_mask=inlier_mask,
+        src=src,
+        homography=_translation_homography(dx, dy),
+        frame_size=frame_size,
+    )
+
+
+def test_visibility_filter_rejects_quad_mostly_outside_frame(
+    detector: BoardDetector, default_scan_quad: None
+) -> None:
+    """I-01: un quad con ~69 % dentro del cuadrado calibrado se descarta."""
+    # Frame portrait 480×640; cuadrado de escaneo x 84.6..310.9, y 189.6..415.9.
+    # La plantilla sintética se proyecta en x 181..369, y 226..364: la
+    # intersección es 129.9×138 px (≈69 % del área del quad), no cero. El
+    # resto de los filtros (área de caja, relleno, score) sí lo aceptarían, así
+    # que si se elimina el filtro de visibilidad este test falla.
+    assert (
+        _build_synthetic_detection(detector, dx=175.0, dy=220.0, frame_size=(480, 640))
+        is None
+    )
+
+
+def test_visibility_filter_accepts_quad_inside_frame(
+    detector: BoardDetector, default_scan_quad: None
+) -> None:
+    """I-01: un quad completamente dentro del cuadrado calibrado se acepta."""
+    # x 106..294, y 226..364: 100 % dentro del cuadrado de escaneo.
+    detection = _build_synthetic_detection(detector, dx=100.0, dy=220.0, frame_size=(480, 640))
+
+    assert detection is not None
+    assert detection.label == "sintetica"
+    assert detection.score >= config.SCORE_THRESHOLD
+
+
+def test_scan_quad_parser_defaults_and_validation() -> None:
+    """El cuadrilátero calibrado se usa por defecto y los valores inválidos caen al default."""
+    assert config.DEFAULT_SCAN_QUAD == pytest.approx(
+        (
+            (0.1762, 0.2962),
+            (0.6477, 0.2962),
+            (0.6477, 0.6499),
+            (0.1762, 0.6499),
+        )
+    )
+    assert config._parse_scan_quad(None) == config.DEFAULT_SCAN_QUAD
+    assert config._parse_scan_quad("0.1,0.1,0.9,0.1,0.9,0.9,0.1,0.9") == (
+        (0.1, 0.1),
+        (0.9, 0.1),
+        (0.9, 0.9),
+        (0.1, 0.9),
+    )
+    assert config._parse_scan_quad("0,0,1,0,1,1") == config.DEFAULT_SCAN_QUAD
+    assert config._parse_scan_quad("0,0,2,0,1,1,0,1") == config.DEFAULT_SCAN_QUAD
+    assert config._parse_scan_quad("a,b,c,d,e,f,g,h") == config.DEFAULT_SCAN_QUAD
+
+
+def test_scan_quad_default_maps_to_t_marks(monkeypatch: pytest.MonkeyPatch) -> None:
+    """El área por defecto es un cuadrado centrado en las cuatro T, ampliado 6 %."""
+    monkeypatch.setattr(config, "SCAN_QUAD", config.DEFAULT_SCAN_QUAD)
+    quad = scan_quad_pixels((480, 640))
+    assert quad == pytest.approx(
+        np.float32(
+            [
+                (84.576, 189.568),
+                (310.896, 189.568),
+                (310.896, 415.936),
+                (84.576, 415.936),
+            ]
+        ),
+        abs=0.01,
+    )
+    assert scan_quad_bbox((480, 640)) == (84, 189, 311, 416)
+
+
+def test_points_in_scan_quad_uses_polygon(monkeypatch: pytest.MonkeyPatch) -> None:
+    """El filtrado de keypoints respeta el cuadrilátero, no su bounding box."""
+    monkeypatch.setattr(config, "SCAN_QUAD", config.DEFAULT_SCAN_QUAD)
+    points = np.float32(
+        [(200, 300), (100, 240), (50, 240), (200, 150), (91, 235), (304, 213)]
+    )
+    mask = points_in_scan_quad(points, (480, 640))
+    assert mask.tolist() == [True, True, False, False, True, True]
+
+
+def test_template_filtered_to_scan_quad(
+    detector: BoardDetector, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Una plantilla con pocos keypoints dentro del quad se descarta entera."""
+    monkeypatch.setattr(config, "SCAN_QUAD", config.DEFAULT_SCAN_QUAD)
+    points = np.float32(
+        [(130, 260), (200, 300), (300, 300), (400, 500), (10, 10), (460, 620)]
+    )
+    template = Template(
+        label="sintetica",
+        path=Path("sintetica.npz"),
+        points=points,
+        descriptors=np.zeros((len(points), 32), dtype=np.uint8),
+        image_size=(480, 640),
+        keypoints=[],
+    )
+    filtered_points, filtered_descriptors = detector._filter_template_scan_quad(template)
+    assert len(filtered_points) == 3
+    assert filtered_descriptors.shape == (3, 32)
+    assert (
+        detector._match_template(
+            template,
+            np.zeros((20, 32), dtype=np.uint8),
+            np.zeros((20, 2), dtype=np.float32),
+            (480, 640),
+        )
+        == []
+    )
+
+
+def test_visibility_filter_uses_scan_quad_polygon(
+    detector: BoardDetector, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """El filtro de visibilidad toma el cuadrilátero calibrado como referencia."""
+    monkeypatch.setattr(config, "SCAN_QUAD", config.DEFAULT_SCAN_QUAD)
+    # El quad proyectado cae solo ~55 % dentro del cuadrilátero (aunque esté
+    # dentro del frame): se descarta.
+    assert _build_synthetic_detection(detector, dx=0.0, dy=230.0, frame_size=(480, 640)) is None
+    # Desplazado al centro del cuadrilátero: se acepta.
+    detection = _build_synthetic_detection(
+        detector, dx=120.0, dy=230.0, frame_size=(480, 640)
+    )
+    assert detection is not None
+    assert detection.label == "sintetica"
 
 
 def test_detector_without_templates_returns_empty(tmp_path: Path, texture: np.ndarray) -> None:

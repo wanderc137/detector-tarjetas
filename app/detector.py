@@ -1,16 +1,20 @@
 """Detección y clasificación de placas mediante ORB + homografía.
 
 Estrategia:
-    1. Se extraen keypoints/descriptores ORB del frame.
-    2. Para cada plantilla aprendida (``data/templates/<label>/*.npz``) se hace
-       ``knnMatch`` con distancia Hamming y ratio test de Lowe.
+    1. Se extraen keypoints/descriptores ORB del área de escaneo (cuadrilátero
+       central de la hoja) del frame; las coordenadas se conservan en el
+       sistema full-frame.
+    2. Para cada plantilla aprendida (``data/templates/<label>/*.npz``) se
+       filtran los keypoints al mismo cuadrilátero y se hace ``knnMatch`` con
+       distancia Hamming y ratio test de Lowe.
     3. Con los matches buenos se estima una homografía (RANSAC) y se proyecta
        el rectángulo de la plantilla al frame.
     4. Para admitir varias instancias del mismo modelo se repite el proceso
        eliminando los descriptores ya asignados a la instancia encontrada (así
        el ratio test vuelve a ser discriminante para la segunda placa).
-    5. Se descartan falsos positivos por número de inliers, área y score, y se
-       agrupan/suprimen cajas solapadas con NMS.
+    5. Se descartan falsos positivos por número de inliers, área, visibilidad
+       del quad dentro del ROI y score, y se agrupan/suprimen cajas solapadas
+       con NMS.
 
 La serialización de plantillas usa ``numpy.savez_compressed`` y guarda los
 campos de ``cv2.KeyPoint`` necesarios para reconstruirlos.
@@ -67,6 +71,75 @@ def normalize_label(raw: object, fallback: str = "") -> str:
     if len(text) >= 2 and text[0] == text[-1] and text[0] in ("'", '"'):
         text = text[1:-1].strip()
     return text or fallback
+
+
+def scan_quad_pixels(image_size: tuple[int, int]) -> np.ndarray:
+    """Devuelve el cuadrilátero de escaneo en píxeles (TL, TR, BR, BL).
+
+    Args:
+        image_size: tamaño ``(ancho, alto)`` de la imagen.
+
+    Returns:
+        Array ``(4, 2)`` float32 en coordenadas de la imagen.
+    """
+    width, height = image_size
+    quad = np.float32([(x * width, y * height) for x, y in config.SCAN_QUAD])
+    quad[:, 0] = np.clip(quad[:, 0], 0.0, float(width))
+    quad[:, 1] = np.clip(quad[:, 1], 0.0, float(height))
+    return quad
+
+
+def scan_quad_bbox(image_size: tuple[int, int]) -> tuple[int, int, int, int]:
+    """Devuelve el bounding box ``(x0, y0, x1, y1)`` del cuadrilátero.
+
+    Se usa para recortar el frame antes de ORB. El borde derecho/inferior es
+    exclusivo, listo para indexar con numpy.
+
+    Args:
+        image_size: tamaño ``(ancho, alto)`` de la imagen.
+
+    Returns:
+        Rectángulo en píxeles; el frame completo si el quad quedara degenerado.
+    """
+    width, height = image_size
+    quad = scan_quad_pixels((width, height))
+    x0 = max(0, min(width, int(np.floor(quad[:, 0].min()))))
+    y0 = max(0, min(height, int(np.floor(quad[:, 1].min()))))
+    x1 = max(0, min(width, int(np.ceil(quad[:, 0].max()))))
+    y1 = max(0, min(height, int(np.ceil(quad[:, 1].max()))))
+    if x1 <= x0 or y1 <= y0:
+        return (0, 0, width, height)
+    return (x0, y0, x1, y1)
+
+
+def points_in_scan_quad(points: np.ndarray, image_size: tuple[int, int]) -> np.ndarray:
+    """Máscara booleana de los puntos que caen dentro del cuadrilátero.
+
+    Args:
+        points: array ``(N, 2)`` en píxeles.
+        image_size: tamaño ``(ancho, alto)`` de la imagen.
+
+    Returns:
+        Array booleano ``(N,)``.
+    """
+    points = np.asarray(points, dtype=np.float32)
+    if len(points) == 0:
+        return np.zeros(0, dtype=bool)
+    polygon = scan_quad_pixels(image_size)
+    signed_area = 0.5 * float(
+        np.sum(
+            polygon[:, 0] * np.roll(polygon[:, 1], -1)
+            - polygon[:, 1] * np.roll(polygon[:, 0], -1)
+        )
+    )
+    sign = 1.0 if signed_area >= 0.0 else -1.0
+    inside = np.ones(len(points), dtype=bool)
+    for index in range(len(polygon)):
+        ax, ay = polygon[index]
+        bx, by = polygon[(index + 1) % len(polygon)]
+        cross = (bx - ax) * (points[:, 1] - ay) - (by - ay) * (points[:, 0] - ax)
+        inside &= (sign * cross) >= -1e-3
+    return inside
 
 
 def create_orb(
@@ -436,16 +509,45 @@ class BoardDetector(threading.Thread):
         if height < 32 or width < 32:
             return []
 
-        keypoints, descriptors = self._orb.detectAndCompute(gray, None)
+        # Solo se buscan keypoints dentro del área de escaneo: así las marcas en
+        # T, el fondo y el brazo del soporte no aportan matches que puedan
+        # sostener un falso positivo. ORB trabaja sobre el bounding box del
+        # cuadrilátero y luego se descartan los keypoints de sus esquinas; las
+        # coordenadas se devuelven al sistema full-frame sumando el origen.
+        roi_x0, roi_y0, roi_x1, roi_y1 = scan_quad_bbox((width, height))
+        roi = gray[roi_y0:roi_y1, roi_x0:roi_x1]
+        if roi.size == 0:
+            return []
+        keypoints, descriptors = self._orb.detectAndCompute(roi, None)
         if descriptors is None or len(descriptors) < config.MIN_MATCH_COUNT:
             return []
 
         frame_points = np.float32([kp.pt for kp in keypoints])
+        frame_points[:, 0] += roi_x0
+        frame_points[:, 1] += roi_y0
+        inside = points_in_scan_quad(frame_points, (width, height))
+        frame_points = frame_points[inside]
+        descriptors = descriptors[inside]
+        if len(descriptors) < config.MIN_MATCH_COUNT:
+            return []
         candidates: list[Detection] = []
         for template in templates:
             candidates.extend(self._match_template(template, descriptors, frame_points, (width, height)))
 
         return self._postprocess(candidates, (width, height))
+
+    def _filter_template_scan_quad(self, template: Template) -> tuple[np.ndarray, np.ndarray]:
+        """Devuelve los keypoints/descriptores de la plantilla dentro del quad.
+
+        Args:
+            template: plantilla aprendida con coordenadas full-frame.
+
+        Returns:
+            ``(points, descriptors)`` filtrados. Pueden quedar vacíos.
+        """
+        points = template.points
+        mask = points_in_scan_quad(points, template.image_size)
+        return points[mask], template.descriptors[mask]
 
     def _match_template(
         self,
@@ -455,7 +557,12 @@ class BoardDetector(threading.Thread):
         frame_size: tuple[int, int],
     ) -> list[Detection]:
         """Busca una plantilla en el frame, admitiendo varias instancias."""
-        if len(template.descriptors) < config.MIN_MATCH_COUNT:
+        # Las plantillas se enseñaron a frame completo: se conservan únicamente
+        # los keypoints que caen dentro del cuadrilátero de escaneo. Si quedan
+        # muy pocos (la placa se enseñó fuera del recuadro) no hay matches
+        # fiables.
+        template_points, template_descriptors = self._filter_template_scan_quad(template)
+        if len(template_descriptors) < config.MIN_MATCH_COUNT:
             return []
 
         results: list[Detection] = []
@@ -468,7 +575,7 @@ class BoardDetector(threading.Thread):
             index_map = np.asarray(available, dtype=np.int32)
             subset = frame_descriptors[index_map]
             try:
-                knn = self._matcher.knnMatch(template.descriptors, subset, k=2)
+                knn = self._matcher.knnMatch(template_descriptors, subset, k=2)
             except cv2.error:  # pragma: no cover - defensivo
                 break
 
@@ -480,7 +587,7 @@ class BoardDetector(threading.Thread):
             if len(good) < config.MIN_MATCH_COUNT:
                 break
 
-            src = template.points[[m.queryIdx for m in good]].astype(np.float32)
+            src = template_points[[m.queryIdx for m in good]].astype(np.float32)
             dst = frame_points[index_map[[m.trainIdx for m in good]]].astype(np.float32)
             if len(src) < 4:
                 break
@@ -566,8 +673,26 @@ class BoardDetector(threading.Thread):
         if not np.all(np.isfinite(projected)):
             return None
 
-        polygon_area = abs(float(cv2.contourArea(projected.astype(np.float32))))
-        bx, by, bw, bh = cv2.boundingRect(projected.astype(np.float32))
+        projected_f = projected.astype(np.float32)
+        quad_area = abs(float(cv2.contourArea(projected_f)))
+
+        # Filtro de visibilidad: un quad proyectado mayormente fuera del área
+        # de escaneo es un falso positivo de fondo. Las plantillas capturadas a
+        # frame completo incluyen la hoja/brazo estático; el matcher ORB las
+        # reconoce aunque la placa no esté y la homografía proyecta el quad
+        # fuera del cuadrilátero central (coordenadas negativas, sobre las
+        # marcas en T o directamente fuera del frame). Se exige que al menos
+        # MIN_VISIBLE_QUAD_RATIO del área del quad caiga dentro del polígono.
+        scan_quad = scan_quad_pixels((width, height)).astype(np.float32)
+        try:
+            visible_area, _ = cv2.intersectConvexConvex(projected_f, scan_quad)
+        except cv2.error:  # pragma: no cover - defensivo
+            return None
+        if quad_area <= 0.0 or float(visible_area) / quad_area < config.MIN_VISIBLE_QUAD_RATIO:
+            return None
+
+        polygon_area = quad_area
+        bx, by, bw, bh = cv2.boundingRect(projected_f)
         if bw <= 1 or bh <= 1:
             return None
         if polygon_area < config.MIN_POLYGON_FILL_RATIO * bw * bh:

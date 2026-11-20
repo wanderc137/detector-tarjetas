@@ -33,6 +33,13 @@ CAMERA_URL: str = os.environ.get("CAMERA_URL", "")
 # Archivo que persiste la URL de cámara elegida desde la web. Tiene prioridad
 # sobre CAMERA_URL y CAMERA_INDEX para que sobreviva a reinicios del servicio.
 CAMERA_URL_FILE: Path = Path(os.environ.get("CAMERA_URL_FILE", DATA_DIR / "camera_url.txt"))
+# Resolución solicitada al abrir la cámara: es un valor de fallback/negociación,
+# no una garantía. La calibración del área de escaneo (``DEFAULT_SCAN_QUAD``)
+# asume un frame **portrait 480×640** (ancho 480, alto 640). Si la fuente
+# entrega otra resolución (por ejemplo 640×480 landscape), el cuadrado
+# calibrado se deforma y deja de coincidir con las marcas en T: en ese caso hay
+# que ajustar ``SCAN_QUAD`` o rotar/reconfigurar la cámara. No cambiar estos
+# valores por defecto sin revalidar el quad.
 CAMERA_WIDTH: int = 640
 CAMERA_HEIGHT: int = 480
 CAMERA_FPS_TARGET: int = 15
@@ -68,6 +75,57 @@ RANSAC_REPROJ_THRESHOLD: float = 5.0
 SCORE_THRESHOLD: float = 0.60
 MIN_BOX_AREA_RATIO: float = 0.02
 MAX_BOX_AREA_RATIO: float = 0.90
+# Fracción mínima del quad proyectado que debe caer dentro del área de escaneo
+# (ROI). Un quad mayormente fuera del ROI es señal de un falso positivo de fondo
+# (las plantillas capturadas a frame completo arrastran la hoja/brazo estático).
+MIN_VISIBLE_QUAD_RATIO: float = 0.80
+# Área de escaneo donde el usuario debe apoyar la tarjeta, como cuadrilátero
+# normalizado en orden TL, TR, BR, BL. Es un CUADRADO en píxeles (mismo ancho y
+# alto), centrado en las puntas internas de las cuatro marcas en T de la hoja de
+# calibración y ampliado un 6 % respecto del ancho medido:
+# centro (198,303), lado 226 px → TL (85,190), TR (311,190), BR (311,416),
+# BL (85,416). El cuadrilátero anterior era 214×158 px (no cuadrado).
+#
+# IMPORTANTE (I-04): las coordenadas normalizadas solo producen un cuadrado de
+# 226×226 px si el frame es **portrait 480×640** (ancho 480, alto 640). La
+# calibración se hizo sobre frames de la cámara IP en esa orientación.
+# ``CAMERA_WIDTH``/``CAMERA_HEIGHT`` son solo fallback/negociación: si la
+# fuente entrega otra resolución (p. ej. 640×480 landscape), el área se vuelve
+# un rectángulo (~302×170 px) y hay que ajustar ``SCAN_QUAD`` o reconfigurar la
+# cámara. No cambiar los valores por defecto sin recalibrar.
+# Se puede sobrescribir con ``SCAN_QUAD="x1,y1,x2,y2,x3,y3,x4,y4"``.
+DEFAULT_SCAN_QUAD: tuple[tuple[float, float], ...] = (
+    (0.1762, 0.2962),
+    (0.6477, 0.2962),
+    (0.6477, 0.6499),
+    (0.1762, 0.6499),
+)
+
+
+def _parse_scan_quad(raw: str | None) -> tuple[tuple[float, float], ...]:
+    """Parsea y valida ``SCAN_QUAD``; ante cualquier valor inválido usa el default.
+
+    Args:
+        raw: texto ``"x1,y1,x2,y2,x3,y3,x4,y4"`` normalizado o ``None``.
+
+    Returns:
+        Cuatro puntos ``(x, y)`` en orden TL, TR, BR, BL.
+    """
+    if not raw:
+        return DEFAULT_SCAN_QUAD
+    try:
+        values = tuple(float(part.strip()) for part in raw.split(","))
+    except ValueError:
+        return DEFAULT_SCAN_QUAD
+    if len(values) != 8 or not all(0.0 <= value <= 1.0 for value in values):
+        return DEFAULT_SCAN_QUAD
+    points = tuple((values[index], values[index + 1]) for index in range(0, 8, 2))
+    if len(set(points)) < 4:
+        return DEFAULT_SCAN_QUAD
+    return points
+
+
+SCAN_QUAD: tuple[tuple[float, float], ...] = _parse_scan_quad(os.environ.get("SCAN_QUAD"))
 NMS_IOU_THRESHOLD: float = 0.30
 INSTANCE_CENTER_DISTANCE_PX: float = 40.0
 # 1 instancia por plantilla: el visor muestra UNA placa a la vez. Más de 1
