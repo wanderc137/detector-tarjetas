@@ -97,7 +97,7 @@ cada placa desde la propia interfaz.
 
 | Parámetro | Especificación |
 |---|---|
-| Placas reconocidas de fábrica | Arduino UNO R4 WiFi, Raspberry Pi 4 Model B, Arduino MKR WiFi 1010 y ESP32 DevKit V1 (4 fichas en `data/boards.json`). Las muestras históricas de `raspberry_pi_2` siguen cargando como **label degradado**, sin ficha. |
+| Placas reconocidas de fábrica | Arduino UNO R4 WiFi, Raspberry Pi 4 Model B, Arduino MKR WiFi 1010 y ESP32 DevKit V1 (4 fichas en `data/boards.json`). No hay plantillas `.npz` incluidas: las 4 hay que enseñarlas desde `/teach`. |
 | Método de detección | ORB (500 keypoints) + BFMatcher Hamming + ratio test 0.75 + homografía RANSAC |
 | Instancias simultáneas | 1 por plantilla (el visor muestra una placa a la vez), más plantillas de otras etiquetas |
 | Cajas de salida | Normalizadas `[0,1]` respecto del frame |
@@ -268,8 +268,10 @@ Los valores exactos que muestra el globo para el catálogo vigente son:
 | `arduino_mkr_wifi_1010` | MKR WiFi 1010 | Microchip SAMD21 | 32 KB | 48 MHz |
 | `esp32` | ESP32 | Espressif ESP32-WROOM-32 | 532 KB | 240 MHz |
 
-Si la etiqueta no tiene ficha (por ejemplo, la histórica `raspberry_pi_2`), el
-globo muestra el `label` como título y el panel avisa que no hay ficha técnica.
+Si la etiqueta no tiene ficha (por ejemplo, la etiqueta ficticia `placa_legacy`
+que usan los tests), el globo muestra el `label` como título y el panel avisa
+que no hay ficha técnica. Es una degradación controlada: la detección sigue
+funcionando aunque el catálogo no conozca esa placa.
 
 ### 5.3 Interpretación de las detecciones
 

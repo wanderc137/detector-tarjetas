@@ -472,9 +472,11 @@ Nombre generado por `TeachMode.capture`:
 
 > **Etiquetas fuera del catálogo**: el detector escanea todas las carpetas de
 > `data/templates/` aunque el label no exista en `data/boards.json`. Esas
-> etiquetas se cargan igual y se muestran sin ficha técnica (caso actual:
-> `raspberry_pi_2`, con 37 muestras históricas, es un **label degradado** que
-> quedó fuera del catálogo de 4 placas). `/api/boards` solo lista el catálogo.
+> etiquetas se cargan igual y se muestran sin ficha técnica. El caso de prueba es
+> la etiqueta **ficticia** `placa_legacy`, que usa `tests/test_api.py` para
+> verificar la degradación; no hay muestras reales en el repositorio porque
+> `data/templates/` solo contiene `.gitkeep`. `/api/boards` solo lista el
+> catálogo de 4 placas.
 
 ### 5.2 Inspección
 
@@ -492,7 +494,7 @@ with np.load(path, allow_pickle=False) as data:
 Salida típica:
 
 ```
-label        <U14  ()
+label        <U19  ()
 descriptors  uint8 (312, 32)
 points       float32 (312, 2)
 sizes        float32 (312,)
@@ -650,7 +652,8 @@ BoardSpecs(path=None)   # default config.BOARDS_JSON
 | `ids()` | Lista de IDs |
 
 `get_summary` toma el MCU cortando en el primer `(`:
-`"ATmega328P (AVR 8 bits)"` → `"ATmega328P"`.
+`"Renesas RA4M1 (Cortex-M4, 32 bits) @48 MHz + módulo ESP32-S3 (Wi-Fi/BLE, 8 MB flash)"`
+→ `"Renesas RA4M1"`.
 
 Caché: clave `(st_mtime_ns, st_size)`. Si el archivo cambia, se relee y se
 revalida. Si no existe → `FileNotFoundError`; JSON inválido → `ValueError` con
@@ -666,39 +669,39 @@ Lista no vacía de objetos. Campos obligatorios:
 | `id` | string no vacío | `"arduino_uno_r4_wifi"` |
 | `name` | string | `"Arduino UNO R4 WiFi"` |
 | `short_name` | string | `"UNO R4 WiFi"` |
-| `mcu_soc` | string | `"Renesas RA4M1 (ARM Cortex-M4) + ESP32-S3 (WiFi/BLE)"` |
+| `mcu_soc` | string | `"Renesas RA4M1 (Cortex-M4, 32 bits) @48 MHz + módulo ESP32-S3 (Wi-Fi/BLE, 8 MB flash)"` |
 | `clock_mhz` | número | `48` |
 | `ram_mb` | número | `0.03125` |
 | `flash_storage_gb` | número | `0.000244140625` |
 | `gpio_count` | entero | `20` |
 | `voltage_v` | número | `5` |
-| `connectivity` | lista de strings | `["USB-C","WiFi","BLE"]` |
-| `dimensions_mm` | lista de ≥2 números | `[68.6, 53.4]` |
-| `year` | entero | `2012` |
+| `connectivity` | lista de strings | `["USB-C","Wi-Fi 802.11 b/g/n 2.4 GHz","Bluetooth 5 LE"]` |
+| `dimensions_mm` | lista de ≥2 números | `[68.85, 53.34]` |
+| `year` | entero | `2023` |
 | `description` | string | texto largo |
 
 Opcionales: `image_path` (string o `null`), `urls` (lista de strings). Cualquier
 otra clave se conserva en `extra` y se publica en `/api/boards`.
 
-Ejemplo mínimo:
+Ejemplo con una ficha real del catálogo (tomado de `data/boards.json`):
 
 ```json
 [
   {
-    "id": "mi_placa",
-    "name": "Mi placa",
-    "short_name": "MiPlaca",
-    "mcu_soc": "ESP32-S3 (Xtensa LX7)",
+    "id": "esp32",
+    "name": "ESP32 DevKit V1",
+    "short_name": "ESP32",
+    "mcu_soc": "Espressif ESP32-WROOM-32 (Xtensa LX6, 2 núcleos)",
     "clock_mhz": 240,
-    "ram_mb": 0.5,
-    "flash_storage_gb": 0.008,
-    "gpio_count": 45,
+    "ram_mb": 0.52,
+    "flash_storage_gb": 0.004,
+    "gpio_count": 25,
     "voltage_v": 3.3,
-    "connectivity": ["Wi-Fi", "BLE", "USB-C"],
-    "dimensions_mm": [63.0, 25.5],
-    "year": 2024,
-    "description": "Placa de ejemplo para la documentación.",
-    "urls": []
+    "connectivity": ["Wi-Fi 2.4 GHz", "Bluetooth 4.2", "UART", "I2C", "SPI", "ADC"],
+    "dimensions_mm": [51.5, 28.5],
+    "year": 2016,
+    "description": "Placa de desarrollo basada en el ESP32-WROOM-32 de Espressif.",
+    "urls": ["https://www.espressif.com/en/products/socs/esp32"]
   }
 ]
 ```
@@ -806,10 +809,10 @@ La cámara inyectada debe exponer: `frame_queue`, `is_open`, `resolution`,
 para el cambio en caliente, `set_source()`.
 
 `detection_payload()` busca cada label en `BoardSpecs`. Si existe, agrega
-`name`, `short_name` y `summary`; si no existe (por ejemplo, una plantilla
-histórica `raspberry_pi_2`), devuelve `name = short_name = label` y
-`summary = {}` sin romper la respuesta. La UI dibuja el label y el panel avisa
-que no hay ficha.
+`name`, `short_name` y `summary`; si no existe (por ejemplo, la etiqueta
+ficticia `placa_legacy` usada por los tests), devuelve
+`name = short_name = label` y `summary = {}` sin romper la respuesta. La UI
+dibuja el label y el panel avisa que no hay ficha.
 
 ### 9.4 `make_handler(app)`
 
@@ -1124,12 +1127,16 @@ No hace falta tocar el detector: escanea cualquier carpeta dentro de
 2. **Etiqueta en los conteos**: agregar el ID a `config.DEFAULT_LABELS` para que
    `/api/health` la muestre en 0 antes de entrenar.
 3. **Etiqueta en la UI de teach** (opcional pero recomendado):
-   - `web/teach.html`: `<option value="mi_placa">Mi placa</option>`;
-   - `web/static/teach.js`: entrada en `LABELS`.
+   - `web/teach.html`: `<option value="<nueva_etiqueta>"><Nombre de la placa></option>`;
+   - `web/static/teach.js`: entrada en `LABELS` con la misma etiqueta.
 4. **Enseñar**: ir a `/teach`, elegir la etiqueta (o capturarla por API), tomar
    10–20 muestras.
-5. **Verificar**: `/api/health` debe mostrar `loaded.mi_placa > 0` y el detector
-   debe dibujar la placa.
+5. **Verificar**: `/api/health` debe mostrar `loaded.<nueva_etiqueta> > 0` y el
+   detector debe dibujar la placa.
+
+> Los textos `<nueva_etiqueta>` y `<Nombre de la placa>` son marcadores: no son
+> ids del catálogo vigente. Los 4 ids reales son `arduino_uno_r4_wifi`,
+> `raspberry_pi_4`, `arduino_mkr_wifi_1010` y `esp32`.
 
 > Si la etiqueta no está en `DEFAULT_LABELS`, igual funciona: el detector la
 > carga desde el directorio y `templates.labels` la lista. Solo faltará en el

@@ -5,16 +5,16 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <title>Detector de Tarjetas — Arduino UNO Q</title>
-<meta content="Una aplicación web que reconoce placas electrónicas en el video de una webcam USB y dibuja recuadros con globos de cómic sobre cada una: Arduino UNO R4 WiFi, Raspberry Pi 4, Arduino MKR WiFi 1010 y ESP32. Toda la captura y la inferencia ocurren en la placa, sin nube." name="description"/>
+<meta content="Una aplicación web que reconoce placas electrónicas en el video de una cámara IP o webcam USB y dibuja recuadros con globos de cómic sobre cada una: Arduino UNO R4 WiFi, Raspberry Pi 4, Arduino MKR WiFi 1010 y ESP32. Toda la captura y la inferencia ocurren en la placa, sin nube." name="description"/>
 <meta content="wanderc137" name="author"/>
 <meta content="website" property="og:type"/>
 <meta content="Detector de Tarjetas — Arduino UNO Q" property="og:title"/>
-<meta content="Una aplicación web que reconoce placas electrónicas en el video de una webcam USB y dibuja recuadros con globos de cómic sobre cada una: Arduino UNO R4 WiFi, Raspberry Pi 4, Arduino MKR WiFi 1010 y ESP32. Toda la captura y la inferencia ocurren en la placa, sin nube." property="og:description"/>
+<meta content="Una aplicación web que reconoce placas electrónicas en el video de una cámara IP o webcam USB y dibuja recuadros con globos de cómic sobre cada una: Arduino UNO R4 WiFi, Raspberry Pi 4, Arduino MKR WiFi 1010 y ESP32. Toda la captura y la inferencia ocurren en la placa, sin nube." property="og:description"/>
 <meta content="https://wanderc137.github.io/detector-tarjetas/" property="og:url"/>
 <meta content="https://wanderc137.github.io/detector-tarjetas/assets/og.png" property="og:image"/>
 <meta content="summary_large_image" name="twitter:card"/>
 <meta content="Detector de Tarjetas — Arduino UNO Q" name="twitter:title"/>
-<meta content="Una aplicación web que reconoce placas electrónicas en el video de una webcam USB y dibuja recuadros con globos de cómic sobre cada una: Arduino UNO R4 WiFi, Raspberry Pi 4, Arduino MKR WiFi 1010 y ESP32. Toda la captura y la inferencia ocurren en la placa, sin nube." name="twitter:description"/>
+<meta content="Una aplicación web que reconoce placas electrónicas en el video de una cámara IP o webcam USB y dibuja recuadros con globos de cómic sobre cada una: Arduino UNO R4 WiFi, Raspberry Pi 4, Arduino MKR WiFi 1010 y ESP32. Toda la captura y la inferencia ocurren en la placa, sin nube." name="twitter:description"/>
 <meta content="https://wanderc137.github.io/detector-tarjetas/assets/og.png" name="twitter:image"/>
 <link href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;rect width='100' height='100' rx='22' fill='%2305070c'/&gt;&lt;rect x='22' y='22' width='56' height='56' rx='12' fill='none' stroke='%2322C55E' stroke-width='7'/&gt;&lt;circle cx='50' cy='50' r='9' fill='%2322C55E'/&gt;&lt;/svg&gt;" rel="icon"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
@@ -283,20 +283,20 @@ footer{position:relative;z-index:1;border-top:1px solid rgba(255,255,255,.08);pa
 <div class="wrap nav-inner">
 <a class="brand" href="#top">
 <span class="brand-mark"><svg viewbox="0 0 24 24"><rect height="14" rx="3" width="14" x="5" y="5"></rect><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"></path><circle cx="12" cy="12" r="2.5"></circle></svg></span>
-<span>Pasillo Seguro<small>Portfolio · Arduino UNO Q</small></span>
+<span>Detector de Tarjetas<small>Portfolio · Arduino UNO Q</small></span>
 </a>
 <nav aria-label="Navegación" class="nav-links">
-<a href="#problema">Visión</a>
-<a href="#como">Cómo funciona</a>
-<a href="#arquitectura">Arquitectura</a>
+<a href="#concepto">Visión</a>
+<a href="#principio-de-funcionamiento">Cómo funciona</a>
+<a href="#pipeline-completo">Arquitectura</a>
 <a href="#video">Video</a>
-<a href="#docs">Documentación</a>
+<a href="#fichas-tecnicas-incluidas">Documentación</a>
 <a class="btn btn-ghost" href="https://github.com/wanderc137/detector-tarjetas" rel="noopener" style="padding:9px 15px" target="_blank">GitHub</a>
 </nav>
 </div>
 </header>
 <main id="top">
-<section class="hero"><div class="wrap hero-grid"><div class="hero-copy"><div class="eyebrow">Arduino UNO Q · OpenCV · ORB</div><h1>Detector de <span class="grad">Tarjetas</span></h1><p class="lead">Una aplicación web que reconoce placas electrónicas en el video de una webcam USB y dibuja recuadros con globos de cómic sobre cada una: Arduino UNO R4 WiFi, Raspberry Pi 4, Arduino MKR WiFi 1010 y ESP32. Toda la captura y la inferencia ocurren en la placa, sin nube.</p><div class="hero-actions"><a class="btn btn-primary" href="https://github.com/wanderc137/detector-tarjetas" rel="noopener" target="_blank">Ver el repositorio</a><a class="btn btn-ghost" href="#concepto">Cómo funciona</a></div><div class="badges"><span class="badge">ORB + homografía</span><span class="badge">Webcam USB</span><span class="badge">15 fps</span><span class="badge">0 GPU</span></div></div>
+<section class="hero"><div class="wrap hero-grid"><div class="hero-copy"><div class="eyebrow">Arduino UNO Q · OpenCV · ORB</div><h1>Detector de <span class="grad">Tarjetas</span></h1><p class="lead">Una aplicación web que reconoce placas electrónicas en el video de una cámara IP o webcam USB y dibuja recuadros con globos de cómic sobre cada una: Arduino UNO R4 WiFi, Raspberry Pi 4, Arduino MKR WiFi 1010 y ESP32. Toda la captura y la inferencia ocurren en la placa, sin nube.</p><div class="hero-actions"><a class="btn btn-primary" href="https://github.com/wanderc137/detector-tarjetas" rel="noopener" target="_blank">Ver el repositorio</a><a class="btn btn-ghost" href="#concepto">Cómo funciona</a></div><div class="badges"><span class="badge">ORB + homografía</span><span class="badge">Cámara IP / USB</span><span class="badge">15 fps</span><span class="badge">0 GPU</span></div></div>
 <div class="hero-visual"><div class="visual-frame" style="padding:18px">
 <svg aria-label="Teléfono, UNO Q y alerta por color" role="img" style="width:100%;height:auto;display:block" viewbox="0 0 520 320">
 <defs><lineargradient id="pg" x1="0" x2="1" y1="0" y2="1">
@@ -314,9 +314,9 @@ footer{position:relative;z-index:1;border-top:1px solid rgba(255,255,255,.08);pa
 <path d="M398 165h56" stroke="url(#pg)" stroke-dasharray="6 4" stroke-width="2"></path>
 <path d="M448 159l10 6-10 6" fill="#2E7DFF"></path>
 <rect fill="none" height="138" rx="10" stroke="#14F195" stroke-width="4" width="42" x="462" y="96"></rect>
-<text fill="#14F195" font-family="monospace" font-size="10" text-anchor="middle" x="483" y="86">verde</text>
+<text fill="#14F195" font-family="monospace" font-size="10" text-anchor="middle" x="483" y="86">globo</text>
 </svg></div>
-<div class="visual-caption">Del stream MJPEG al riesgo de choque, en la placa.</div></div>
+<div class="visual-caption">Del stream MJPEG a la ficha técnica, en la placa.</div></div>
 </div></section>
 
 
@@ -326,12 +326,12 @@ footer{position:relative;z-index:1;border-top:1px solid rgba(255,255,255,.08);pa
 
 
 
-<div class="rich-block"><section class="section" id="concepto"><div class="wrap"><div class="section-head"><div class="kicker">El concepto</div><h2>Qué es y por qué existe</h2><p class="section-sub">El problema, el enfoque y el alcance real del proyecto.</p></div><div class="concept-grid"><div><p>Detector de tarjetas es una aplicación web local que reconoce placas electrónicas en el video de una webcam USB. Usa OpenCV ORB, BFMatcher con ratio test y homografía RANSAC para comparar el cuadro contra plantillas que el usuario enseña desde /teach; al detectar, dibuja un globo cómic con MCU, RAM y reloj. Trae fichas de Arduino UNO R4 WiFi, Raspberry Pi 4, Arduino MKR WiFi 1010 y ESP32.</p><p>La versión 1.0.0 demuestra que se puede hacer detección multinstancia sin redes neuronales, sin GPU y sin internet, con 41 tests y una inferencia objetivo de 200–300 ms en ARM64. No es un clasificador genérico ni hace OCR: solo reconoce lo enseñado y depende de la calidad de las muestras. En esta etapa el despliegue físico en la UNO Q quedó pendiente porque la placa no era accesible por red ni por ADB.</p></div><div class="concept-side"><div class="k">Cómo leer esta ficha</div><p>Los tropiezos salen de la bitácora y de las versiones tempranas. La evaluación usa seis criterios fijos, de 1 a 5, y no premia la espectacularidad: premia que el proyecto se pueda reproducir y entender.</p></div></div></div></section>
+<div class="rich-block"><section class="section" id="concepto"><div class="wrap"><div class="section-head"><div class="kicker">El concepto</div><h2>Qué es y por qué existe</h2><p class="section-sub">El problema, el enfoque y el alcance real del proyecto.</p></div><div class="concept-grid"><div><p>Detector de tarjetas es una aplicación web local que reconoce placas electrónicas en el video de una cámara IP o webcam USB. Usa OpenCV ORB, BFMatcher con ratio test y homografía RANSAC para comparar el cuadro contra plantillas que el usuario enseña desde /teach; al detectar, dibuja un globo cómic con MCU, RAM y reloj. Trae fichas de Arduino UNO R4 WiFi, Raspberry Pi 4, Arduino MKR WiFi 1010 y ESP32.</p><p>La versión 1.0.0 demuestra que se puede hacer detección por plantillas sin redes neuronales, sin GPU y sin internet, con 41 tests y una inferencia objetivo de 200–300 ms en ARM64. No es un clasificador genérico ni hace OCR: solo reconoce lo enseñado y depende de la calidad de las muestras. El despliegue en la UNO Q se completó por USB con ADB y el servicio systemd queda habilitado y activo.</p></div><div class="concept-side"><div class="k">Cómo leer esta ficha</div><p>Los tropiezos salen de la bitácora y de las versiones tempranas. La evaluación usa seis criterios fijos, de 1 a 5, y no premia la espectacularidad: premia que el proyecto se pueda reproducir y entender.</p></div></div></div></section>
 <section class="section tight rec-section" id="video" style="--accent:#2E7DFF;--accent2:#14F195">
 <div class="wrap">
 <div class="rec-kicker">REC · VIDEO · 3:04</div>
 <h2 class="rec-h2">Detector de tarjetas · ORB, homografía y cómic</h2>
-<p class="rec-lead">Cómo el detector reconoce Arduino UNO, Nano y Raspberry Pi con ORB, ratio test de Lowe, homografía RANSAC y NMS, y convierte cada caja en un globo de cómic con la ficha técnica de la placa.</p>
+<p class="rec-lead">Cómo el detector reconoce Arduino UNO R4 WiFi, Raspberry Pi 4, Arduino MKR WiFi 1010 y ESP32 con ORB, ratio test de Lowe, homografía RANSAC y NMS, y convierte cada caja en un globo de cómic con la ficha técnica de la placa.</p>
 <div class="rec-banner">
 <span class="rec-banner-icon">📋</span>
 <strong>Puedes copiar y pegar los comandos del video desde el video !!!</strong>
@@ -344,7 +344,7 @@ footer{position:relative;z-index:1;border-top:1px solid rgba(255,255,255,.08);pa
 <div class="rec-poster" id="rec-poster">
 <div class="rec-kicker">ASCIINEMA · 3:04</div>
 <h3>Detector de tarjetas · ORB, homografía y cómic</h3>
-<p>Cómo el detector reconoce Arduino UNO, Nano y Raspberry Pi con ORB, ratio test de Lowe, homografía RANSAC y NMS, y convierte cada caja en un globo de cómic con la ficha técnica de la placa.</p>
+<p>Cómo el detector reconoce Arduino UNO R4 WiFi, Raspberry Pi 4, Arduino MKR WiFi 1010 y ESP32 con ORB, ratio test de Lowe, homografía RANSAC y NMS, y convierte cada caja en un globo de cómic con la ficha técnica de la placa.</p>
 <div class="rec-poster-meta">detector-tarjetas · código real</div>
 <button class="rec-btn rec-primary" id="rec-start" type="button">▶ Reproducir</button>
 </div>
@@ -365,36 +365,36 @@ footer{position:relative;z-index:1;border-top:1px solid rgba(255,255,255,.08);pa
 </div>
 </section>
 
-<section class="section tight"><div class="wrap"><div class="section-head"><div class="kicker">El proyecto en detalle</div><h2>Documentación preservada</h2><p class="section-sub">El README original, completo y en su contexto.</p></div><div class="detail rich">
+<section class="section tight"><div class="wrap"><div class="section-head"><div class="kicker">El proyecto en detalle</div><h2>Documentación preservada</h2><p class="section-sub">El README del proyecto, completo y en su contexto. El catálogo vigente es el de cuatro placas.</p></div><div class="detail rich">
 <p><strong>Visión artificial en tiempo real, 100 % local, sin modelos externos.</strong></p>
-<p>Aplicación web auto-contenida que <strong>reconoce placas electrónicas</strong> (Arduino UNO R3,
-Arduino Nano, Raspberry Pi 4 y Raspberry Pi 5) en el video de una webcam USB y
-dibuja <strong>recuadros verdes con globos cómic</strong> que muestran la información técnica
+<p>Aplicación web auto-contenida que <strong>reconoce placas electrónicas</strong> (Arduino UNO R4 WiFi,
+Raspberry Pi 4, Arduino MKR WiFi 1010 y ESP32) en el video de una cámara IP o webcam USB y
+dibuja <strong>marcos dorados con globos cómic</strong> que muestran la información técnica
 de cada placa sobre la imagen en vivo.</p>
 <p>Corre en el <strong>lado Linux de una Arduino UNO Q</strong> (Debian ARM64) y también en un
 <strong>notebook x86_64</strong> para desarrollo. El navegador solo abre la página: toda la
 captura, la inferencia y el servidor viven en la placa.</p>
 <blockquote>
 <p><strong>Versión:</strong> 1.0.0 · <strong>Estado:</strong> código auditado y aprobado · <strong>Tests:</strong> 41/41
-pasando en el notebook · <strong>Despliegue en UNO Q:</strong> pendiente (ver
-<a href="#estado-actual-verificado">Estado actual verificado</a>).</p>
+pasando en el notebook · <strong>Despliegue en UNO Q:</strong> completado por USB (ADB), servicio
+systemd habilitado y activo (ver <a href="#estado-actual-verificado">Estado actual verificado</a>).</p>
 </blockquote>
 <hr/>
 <h2 id="tabla-de-contenidos">Tabla de contenidos</h2>
 <ol>
-<li><a href="#qué-es">Qué es</a></li>
-<li><a href="#características">Características</a></li>
+<li><a href="#que-es">Qué es</a></li>
+<li><a href="#caracteristicas">Características</a></li>
 <li><a href="#principio-de-funcionamiento">Principio de funcionamiento</a></li>
-<li><a href="#hardware-y-conexión">Hardware y conexión</a></li>
+<li><a href="#hardware-y-conexion">Hardware y conexión</a></li>
 <li><a href="#requisitos">Requisitos</a></li>
 <li><a href="#puesta-en-marcha-local-notebook">Puesta en marcha local (notebook)</a></li>
 <li><a href="#despliegue-en-la-arduino-uno-q">Despliegue en la Arduino UNO Q</a></li>
-<li><a href="#modo-enseñar-paso-a-paso">Modo enseñar paso a paso</a></li>
+<li><a href="#modo-ensenar-paso-a-paso">Modo enseñar paso a paso</a></li>
 <li><a href="#uso-diario">Uso diario</a></li>
-<li><a href="#fichas-técnicas-incluidas">Fichas técnicas incluidas</a></li>
+<li><a href="#fichas-tecnicas-incluidas">Fichas técnicas incluidas</a></li>
 <li><a href="#api-http">API HTTP</a></li>
 <li><a href="#rendimiento-y-ajustes">Rendimiento y ajustes</a></li>
-<li><a href="#resolución-de-problemas">Resolución de problemas</a></li>
+<li><a href="#resolucion-de-problemas">Resolución de problemas</a></li>
 <li><a href="#seguridad-y-advertencias">Seguridad y advertencias</a></li>
 <li><a href="#estado-actual-verificado">Estado actual verificado</a></li>
 <li><a href="#estructura-del-repositorio">Estructura del repositorio</a></li>
@@ -408,8 +408,8 @@ la nube y no necesita GPU. La detección se resuelve con <strong>OpenCV ORB +
 homografía RANSAC</strong> y un conjunto de plantillas que el propio usuario enseña
 desde el navegador apuntando la cámara a cada placa.</p>
 <p>El resultado se presenta como una <strong>escena de cómic</strong>: cada placa detectada
-recibe un recuadro verde con esquinas estilo visor y un globo de diálogo blanco
-con borde negro que resume tres datos (MCU, RAM y reloj). Al hacer clic sobre la
+recibe un marco dorado con esquinas estilo visor y un globo de diálogo marfil
+con borde oscuro que resume tres datos (MCU, RAM y reloj). Al hacer clic sobre la
 placa o el globo se abre un panel lateral con la ficha técnica completa.</p>
 <table>
 <thead>
@@ -429,11 +429,11 @@ placa o el globo se abre un panel lateral con la ficha técnica completa.</p>
 </tr>
 <tr>
 <td>Placas de fábrica</td>
-<td>Arduino UNO R3, Arduino Nano (R3), Raspberry Pi 4, Raspberry Pi 5</td>
+<td>Arduino UNO R4 WiFi, Raspberry Pi 4, Arduino MKR WiFi 1010, ESP32</td>
 </tr>
 <tr>
 <td>Entrada</td>
-<td>Webcam USB UVC (<code>/dev/video0</code>, 640×480, MJPG)</td>
+<td>Cámara IP HTTP/MJPEG o webcam USB UVC (<code>/dev/video0</code>, 640×480)</td>
 </tr>
 <tr>
 <td>Salida</td>
@@ -445,7 +445,7 @@ placa o el globo se abre un panel lateral con la ficha técnica completa.</p>
 </tr>
 <tr>
 <td>Alternativa</td>
-<td>Notebook Linux x86_64 con webcam</td>
+<td>Notebook Linux x86_64 con cámara IP o webcam</td>
 </tr>
 <tr>
 <td>Dependencias externas</td>
@@ -470,8 +470,8 @@ placa o el globo se abre un panel lateral con la ficha técnica completa.</p>
 <h2 id="caracteristicas">Características</h2>
 <ul>
 <li>🎥 <strong>Stream MJPEG</strong> en vivo a 640×480, calidad JPEG 85, hasta 15 fps.</li>
-<li>🧠 <strong>Detección multinstancia</strong>: varias placas distintas y varias copias del
-  mismo modelo en el mismo cuadro, separadas por clustering espacial.</li>
+<li>🧠 <strong>Detección por plantillas</strong>: varias placas distintas en el mismo cuadro,
+  separadas por NMS y agrupación espacial; una instancia por plantilla.</li>
 <li>💬 <strong>Globos cómic</strong> dibujados en <code>&lt;canvas&gt;</code>: nombre corto + MCU + RAM + reloj,
   con colita que apunta a la placa y evitación de solapamientos.</li>
 <li>🖱️ <strong>Ficha completa al clic</strong>: panel lateral con MCU/SoC, reloj, RAM,
@@ -493,9 +493,9 @@ placa o el globo se abre un panel lateral con la ficha técnica completa.</p>
 <hr/>
 <h2 id="principio-de-funcionamiento">Principio de funcionamiento</h2>
 <h3 id="pipeline-completo">Pipeline completo</h3>
-<pre><code>                        /dev/video0  (webcam USB UVC)
+<pre><code>             Cámara IP (IP Webcam)  o  webcam USB UVC
                               │
-                              │  V4L2 · MJPG · 640×480 · 15 fps
+                              │  HTTP/MJPEG o V4L2 · 640×480 · 15 fps
                               ▼
                  ┌─────────────────────────┐
                  │  CameraCapture (hilo)   │
@@ -521,7 +521,7 @@ placa o el globo se abre un panel lateral con la ficha técnica completa.</p>
                                       GET /api/detections  ◄── polling 250 ms
                                                      │
                                                      ▼
-                                      &lt;canvas&gt;: recuadro verde + globo cómic
+                                      &lt;canvas&gt;: marco dorado + globo cómic
 </code></pre>
 <h3 id="1-captura">1. Captura</h3>
 <p>El hilo <code>CameraCapture</code> abre la cámara con el backend <strong>V4L2</strong> (y cae a
@@ -565,7 +565,7 @@ positivos antes de la geometría.</p>
 transforma el plano de la imagen enseñada al plano del frame actual (perspectiva,
 rotación, escala). RANSAC descarta los matches que no son geométricamente
 consistentes; solo sobreviven los <strong>inliers</strong>.</p>
-<p>Se exige un mínimo de <strong>10 matches</strong> y <strong>15 inliers</strong>. Luego se proyectan las
+<p>Se exige un mínimo de <strong>10 matches</strong> y <strong>20 inliers</strong>. Luego se proyectan las
 cuatro esquinas del área útil de la plantilla al frame, se obtiene su <em>bounding
 box</em> y se valida:</p>
 <ul>
@@ -580,24 +580,23 @@ box</em> y se valida:</p>
       + 0.3 × (1 − distancia_media/90)   calidad del apareamiento
       + 0.1 × min(1, área/2% × 0.5)      tamaño relativo de la detección
 </code></pre>
-<p>Una detección se publica solo si <code>score ≥ 0.35</code>. Después se aplica <strong>NMS</strong>
+<p>Una detección se publica solo si <code>score ≥ 0.60</code>. Después se aplica <strong>NMS</strong>
 (supresión de no máximos, IoU &gt; 0.30) y se <strong>agrupan</strong> detecciones de la misma
 etiqueta cuyos centros estén a menos de <strong>40 px</strong>, conservando la de mayor score.</p>
-<h3 id="6-varias-instancias-del-mismo-modelo">6. Varias instancias del mismo modelo</h3>
-<p>Para admitir dos UNO R3 iguales en el mismo cuadro, el detector repite el
-matching hasta <strong>4 veces por plantilla</strong>. Después de encontrar una instancia,
-<strong>elimina de la búsqueda todos los keypoints del frame que caen dentro de su
-caja</strong> (con 8 px de margen), no solo los inliers. Así el ratio test vuelve a ser
-discriminante para la segunda placa idéntica. Cada instancia recibe un
-<code>instance_id</code> (0, 1, 2…) ordenado por posición horizontal.</p>
+<h3 id="6-una-instancia-por-plantilla">6. Una instancia por plantilla</h3>
+<p>El detector conserva una sola detección por plantilla (<code>MAX_INSTANCES_PER_TEMPLATE=1</code>):
+si dos cajas compiten por la misma placa, el <strong>NMS</strong> (IoU &gt; 0.30) y la agrupación
+por centros a menos de <strong>40 px</strong> dejan la de mayor score. El código mantiene el
+soporte multinstancia (asignación de <code>instance_id</code> 0, 1, 2… por posición
+horizontal), pero el valor por defecto prioriza una lectura estable por placa.</p>
 <h3 id="7-del-json-al-canvas">7. Del JSON al canvas</h3>
 <p>El servidor publica las detecciones con <strong>cajas normalizadas</strong> <code>[0, 1]</code> respecto
 del tamaño del frame. El navegador hace polling cada <strong>250 ms</strong>, escala las cajas
 al tamaño real del <code>&lt;img&gt;</code> (incluyendo <code>devicePixelRatio</code> y <code>ResizeObserver</code>) y
 dibuja:</p>
 <ul>
-<li>recuadro verde <code>#00ff3c</code> con glow y esquinas estilo visor;</li>
-<li>globo blanco con borde negro de 3 px, texto en tipografía cómic del sistema;</li>
+<li>marco dorado <code>#c9a35a</code> con glow y esquinas estilo visor;</li>
+<li>globo marfil con borde oscuro de 3 px, texto en tipografía cómic del sistema;</li>
 <li>colita triangular hacia la placa;</li>
 <li>reubicación automática si el globo se saldría de pantalla o pisaría a otro.</li>
 </ul>
@@ -633,7 +632,7 @@ dibuja:</p>
 </tbody>
 </table>
 <p>La contrapartida es que <strong>hay que enseñar cada placa</strong> y que la robustez depende
-de la calidad de las muestras (ver <a href="#modo-enseñar-paso-a-paso">Modo enseñar</a>).
+de la calidad de las muestras (ver <a href="#modo-ensenar-paso-a-paso">Modo enseñar</a>).
 Para cuatro placas conocidas y una LAN de confianza, el intercambio es muy
 favorable.</p>
 <hr/>
@@ -647,7 +646,7 @@ favorable.</p>
                                            │  Wi-Fi · LAN de confianza
                                            ▼
                     ┌───────────────────────────────────────────────┐
-                    │        Router Teltonika (LAN + DHCP)          │
+                    │        Router (LAN + DHCP)                    │
                     │        p. ej. 192.168.1.0/24                  │
                     └──────────────────────┬────────────────────────┘
                                            │  Ethernet o Wi-Fi
@@ -659,36 +658,36 @@ favorable.</p>
 │  │ Lado Linux · Debian ARM64          │  │ Lado MCU · STM32U585       │  │
 │  │                                    │  │ (Zephyr; no se usa en      │  │
 │  │  app/server.py    :8000            │  │  esta versión)             │  │
-│  │  app/camera.py    V4L2             │  └────────────────────────────┘  │
+│  │  app/camera.py    HTTP/MJPEG o V4L2│  └────────────────────────────┘  │
 │  │  app/detector.py  ORB/RANSAC       │                                  │
 │  │  data/templates/  plantillas .npz  │                                  │
 │  └───────────────┬────────────────────┘                                  │
-│                  │  USB (hub USB-C si hace falta)                        │
+│                  │  red local (cámara IP) o USB (webcam UVC)             │
 └──────────────────┼───────────────────────────────────────────────────────┘
                    ▼
-          ┌──────────────────┐
-          │  Webcam USB UVC  │   640×480 · MJPG · 15 fps
-          │  (ej. Logitech)  │
-          └──────────────────┘
+        ┌────────────────────────────┐
+        │ Teléfono con IP Webcam     │   Wi-Fi · MJPEG · 640×480
+        │ (o webcam USB UVC)         │
+        └────────────────────────────┘
 </code></pre>
 <p>Puntos clave:</p>
 <ul>
 <li><strong>La aplicación corre en la UNO Q</strong>, no en el notebook. El notebook solo abre
   el navegador y consume el stream MJPEG y el JSON.</li>
-<li>La webcam va conectada a la <strong>UNO Q</strong> (directamente o mediante un hub USB-C si
-  no queda un puerto libre). No va a la notebook.</li>
-<li>El router Teltonika solo transporta tráfico IP; <strong>no se modifica su
-  configuración</strong>.</li>
+<li>La <strong>cámara IP</strong> (teléfono con IP Webcam) entrega MJPEG por Wi-Fi y se configura
+  desde la web; una <strong>webcam USB UVC</strong> es opcional y va conectada a la UNO Q
+  (directamente o mediante un hub USB-C).</li>
+<li>El router solo transporta tráfico IP; <strong>no se modifica su configuración</strong>.</li>
 <li>La placa necesita una dirección IP alcanzable desde el notebook. El modo
   habitual es DHCP en la misma LAN.</li>
 </ul>
 <h3 id="modo-desarrollo-todo-corre-en-el-notebook">Modo desarrollo: todo corre en el notebook</h3>
-<pre><code>┌──────────────┐   USB   ┌─────────────────────────────────────┐
-│ Webcam USB   │────────►│ Notebook Linux x86_64               │
-└──────────────┘         │  .venv + opencv-python-headless     │
-                         │  python -m app.server (:8000)       │
-                         │  Navegador: http://localhost:8000/  │
-                         └─────────────────────────────────────┘
+<pre><code>┌──────────────────────┐  Wi-Fi   ┌─────────────────────────────────────┐
+│ Teléfono IP Webcam   │─────────►│ Notebook Linux x86_64               │
+│ (o webcam USB UVC)   │  o USB   │  .venv + opencv-python-headless     │
+└──────────────────────┘          │  python -m app.server (:8000)       │
+                                  │  Navegador: http://localhost:8000/  │
+                                  └─────────────────────────────────────┘
 </code></pre>
 <p>Es el modo recomendado para probar cambios de código, porque compilar y
 reiniciar es inmediato y no depende del estado de la placa.</p>
@@ -705,10 +704,15 @@ reiniciar es inmediato y no depende del estado de la placa.</p>
 <tr>
 <td>Arduino UNO Q</td>
 <td>Fuente USB-C con suficiente corriente</td>
-<td>Alimenta también el hub y la webcam</td>
+<td>Alimenta también el hub si se usa webcam USB</td>
 </tr>
 <tr>
-<td>Webcam USB</td>
+<td>Cámara IP</td>
+<td>Wi-Fi/LAN, URL MJPEG</td>
+<td>Sin cable hacia la UNO Q; se configura desde la web</td>
+</tr>
+<tr>
+<td>Webcam USB (opcional)</td>
 <td>Puerto USB de la UNO Q o hub USB-C</td>
 <td>UVC estándar; MJPG recomendado</td>
 </tr>
@@ -725,7 +729,7 @@ reiniciar es inmediato y no depende del estado de la placa.</p>
 </tbody>
 </table>
 <blockquote>
-<p>Si la webcam consume más corriente de la que entrega el puerto, usá un <strong>hub
+<p>Si usás una webcam USB y consume más corriente de la que entrega el puerto, usá un <strong>hub
 USB-C con alimentación</strong>. Los síntomas típicos son desconexiones intermitentes
 y <code>camera.present=false</code> en <code>/api/health</code>.</p>
 </blockquote>
@@ -734,8 +738,10 @@ y <code>camera.present=false</code> en <code>/api/health</code>.</p>
 <h3 id="hardware">Hardware</h3>
 <ul>
 <li>Arduino UNO Q (lado Linux Debian ARM64) <strong>o</strong> notebook Linux x86_64.</li>
-<li>Webcam USB <strong>UVC</strong> (clase de video estándar, sin drivers propietarios).</li>
-<li>Hub USB-C si hace falta conectar la webcam y alimentar la placa.</li>
+<li><strong>Cámara IP</strong> con stream HTTP/MJPEG (por ejemplo, un teléfono con IP Webcam)
+  <strong>o</strong> una webcam USB <strong>UVC</strong> (clase de video estándar, sin drivers
+  propietarios).</li>
+<li>Hub USB-C solo si hace falta conectar una webcam USB y alimentar la placa.</li>
 <li>Router con DHCP y LAN accesible desde el navegador.</li>
 </ul>
 <h3 id="software">Software</h3>
@@ -792,7 +798,11 @@ están en <strong><code>requirements-dev.txt</code></strong>.</p>
 v4l2-ctl --list-devices          # requiere v4l-utils
 v4l2-ctl -d /dev/video0 --all | head -40
 </code></pre>
-<p>Si el usuario no pertenece al grupo <code>video</code>:</p>
+<p>Para una cámara IP, verificá la URL desde la notebook antes de configurarla:</p>
+<pre><code class="language-bash">curl -I http://&lt;ip-camara&gt;:8080/video
+# Debe responder 200 y Content-Type: multipart/x-mixed-replace
+</code></pre>
+<p>Si usás webcam USB y el usuario no pertenece al grupo <code>video</code>:</p>
 <pre><code class="language-bash">sudo usermod -aG video "$USER"
 # cerrar sesión y volver a entrar (o reiniciar el servicio)
 </code></pre>
@@ -839,10 +849,10 @@ python -m app.server
     "count": 0,
     "labels": [],
     "by_label": {
-      "arduino_nano": 0,
-      "arduino_uno_r3": 0,
+      "arduino_uno_r4_wifi": 0,
       "raspberry_pi_4": 0,
-      "raspberry_pi_5": 0
+      "arduino_mkr_wifi_1010": 0,
+      "esp32": 0
     },
     "loaded": {}
   },
@@ -852,7 +862,7 @@ python -m app.server
 }
 </code></pre>
 <ul>
-<li><code>camera.present=true</code> → la webcam entrega frames.</li>
+<li><code>camera.present=true</code> → la cámara entrega frames.</li>
 <li><code>camera.present=false</code> → la app funciona igual, pero muestra el frame de estado.</li>
 <li><code>templates.count=0</code> → todavía no hay plantillas: hay que entrenar.</li>
 </ul>
@@ -866,7 +876,7 @@ pytest -q
 <h2 id="despliegue-en-la-arduino-uno-q">Despliegue en la Arduino UNO Q</h2>
 <blockquote>
 <p><strong>Prerrequisito:</strong> la UNO Q debe ser alcanzable por red y tener SSH habilitado.
-Si no lo está, saltá a <a href="#fallback-usb-c--adb--app-lab">Fallback USB-C / ADB / App Lab</a>.</p>
+Si no lo está, saltá a <a href="#fallback-usb-c-adb-app-lab">Fallback USB-C / ADB / App Lab</a>.</p>
 </blockquote>
 <h3 id="paso-1-descubrir-la-placa-en-la-lan">Paso 1 — Descubrir la placa en la LAN</h3>
 <pre><code class="language-bash">./scripts/discover_unoq.sh
@@ -1049,7 +1059,7 @@ caliente y empieza a reconocerla.</p>
 <ol>
 <li><strong>Abrí <code>/teach</code></strong> desde la barra superior del detector (“🎓 Modo enseñar”).</li>
 <li><strong>Elegí la etiqueta</strong> en el desplegable:
-   <code>arduino_uno_r3</code>, <code>arduino_nano</code>, <code>raspberry_pi_4</code>, <code>raspberry_pi_5</code>.</li>
+   <code>arduino_uno_r4_wifi</code>, <code>raspberry_pi_4</code>, <code>arduino_mkr_wifi_1010</code>, <code>esp32</code>.</li>
 <li><strong>Encuadrá la placa</strong>:
    - buena luz difusa, sin sombras duras;
    - fondo <strong>contrastado y liso</strong> (una hoja oscura o una mesa mate funciona bien);
@@ -1084,7 +1094,7 @@ caliente y empieza a reconocerla.</p>
 <tr>
 <td><code>label</code></td>
 <td>Unicode 0-d</td>
-<td>Etiqueta limpia (<code>arduino_uno_r3</code>)</td>
+<td>Etiqueta limpia (<code>arduino_uno_r4_wifi</code>)</td>
 </tr>
 <tr>
 <td><code>descriptors</code></td>
@@ -1187,14 +1197,14 @@ el archivo.</p>
    cuando llega el stream.</li>
 <li><strong>Apuntá la cámara</strong> a una o más placas.</li>
 <li><strong>Interpretá la escena</strong>:
-   - recuadro verde con esquinas → placa detectada;
-   - globo blanco → nombre corto + <code>MCU</code>, <code>RAM</code>, <code>Reloj</code>;
+   - marco dorado con esquinas → placa detectada;
+   - globo marfil → nombre corto + <code>MCU</code>, <code>RAM</code>, <code>Reloj</code>;
    - píldora de estado → <code>en vivo · N fps</code>, <code>sin cámara</code> o <code>sin conexión</code>.</li>
 <li><strong>Hacé clic</strong> sobre la placa o su globo para abrir la ficha completa en el
    panel lateral. Se cierra con <code>×</code> o con la tecla <code>Esc</code>.</li>
-<li><strong>Varias placas a la vez</strong>: cada etiqueta distinta se dibuja por separado; dos
-   copias del mismo modelo reciben <code>instance_id</code> 0 y 1 y se dibujan como dos
-   recuadros independientes.</li>
+<li><strong>Varias placas a la vez</strong>: cada etiqueta distinta se dibuja por separado. El
+   default admite <strong>una instancia por plantilla</strong>; si aparece una copia del mismo
+   modelo, el NMS conserva la de mayor score.</li>
 </ol>
 <h3 id="senales-de-la-interfaz">Señales de la interfaz</h3>
 <table>
@@ -1283,28 +1293,16 @@ muestran en el panel lateral y los que resumen los globos:</p>
 </thead>
 <tbody>
 <tr>
-<td><code>arduino_uno_r3</code></td>
-<td>Arduino UNO R3</td>
-<td>ATmega328P (AVR 8 bits)</td>
-<td>16 MHz</td>
-<td>2 KB</td>
+<td><code>arduino_uno_r4_wifi</code></td>
+<td>Arduino UNO R4 WiFi</td>
+<td>Renesas RA4M1 (Cortex-M4) + ESP32-S3</td>
+<td>48 MHz</td>
 <td>32 KB</td>
+<td>256 KB</td>
 <td>20</td>
 <td>5 V</td>
-<td>68.6 × 53.4 mm</td>
-<td>2012</td>
-</tr>
-<tr>
-<td><code>arduino_nano</code></td>
-<td>Arduino Nano (R3)</td>
-<td>ATmega328P (AVR 8 bits)</td>
-<td>16 MHz</td>
-<td>2 KB</td>
-<td>32 KB</td>
-<td>22</td>
-<td>5 V</td>
-<td>45 × 18 mm</td>
-<td>2008</td>
+<td>68.85 × 53.34 mm</td>
+<td>2023</td>
 </tr>
 <tr>
 <td><code>raspberry_pi_4</code></td>
@@ -1319,16 +1317,28 @@ muestran en el panel lateral y los que resumen los globos:</p>
 <td>2019</td>
 </tr>
 <tr>
-<td><code>raspberry_pi_5</code></td>
-<td>Raspberry Pi 5</td>
-<td>Broadcom BCM2712 (Cortex-A76, 4 núcleos)</td>
-<td>2.4 GHz</td>
-<td>4 GB</td>
-<td>microSD</td>
-<td>40</td>
-<td>5 V</td>
-<td>85 × 56 mm</td>
-<td>2023</td>
+<td><code>arduino_mkr_wifi_1010</code></td>
+<td>Arduino MKR WiFi 1010</td>
+<td>Microchip SAMD21 (Cortex-M0+) + u-blox NINA-W102</td>
+<td>48 MHz</td>
+<td>32 KB</td>
+<td>256 KB</td>
+<td>15</td>
+<td>3.3 V</td>
+<td>61.5 × 25.0 mm</td>
+<td>2018</td>
+</tr>
+<tr>
+<td><code>esp32</code></td>
+<td>ESP32 DevKit V1</td>
+<td>Espressif ESP32-WROOM-32 (Xtensa LX6, 2 núcleos)</td>
+<td>240 MHz</td>
+<td>0.52 MB</td>
+<td>4 MB</td>
+<td>25</td>
+<td>3.3 V</td>
+<td>51.5 × 28.5 mm</td>
+<td>2016</td>
 </tr>
 </tbody>
 </table>
@@ -1342,20 +1352,20 @@ muestran en el panel lateral y los que resumen los globos:</p>
 </thead>
 <tbody>
 <tr>
-<td>UNO R3</td>
-<td>USB-B, UART, I2C, SPI, ICSP</td>
-</tr>
-<tr>
-<td>Nano</td>
-<td>Mini-USB, UART, I2C, SPI, ICSP</td>
+<td>UNO R4 WiFi</td>
+<td>USB-C, Wi-Fi 802.11 b/g/n 2.4 GHz, Bluetooth 5 LE, UART, I2C (Qwiic), SPI, CAN, DAC 12 bits</td>
 </tr>
 <tr>
 <td>Pi 4</td>
 <td>Wi-Fi 5, Bluetooth 5.0, Gigabit Ethernet, USB 3.0, micro-HDMI, GPIO 40 pines</td>
 </tr>
 <tr>
-<td>Pi 5</td>
-<td>Wi-Fi 5, Bluetooth 5.0, Gigabit Ethernet, USB 3.0, micro-HDMI, PCIe 2.0 x1, GPIO 40 pines</td>
+<td>MKR WiFi 1010</td>
+<td>USB micro-B, Wi-Fi 802.11 b/g/n 2.4 GHz, Bluetooth 4.2, UART, I2C, SPI, ADC, DAC, PWM</td>
+</tr>
+<tr>
+<td>ESP32</td>
+<td>Wi-Fi 2.4 GHz, Bluetooth 4.2, UART, I2C, SPI, ADC</td>
 </tr>
 </tbody>
 </table>
@@ -1481,10 +1491,10 @@ curl -s "$BASE/api/boards" | python3 -m json.tool
 # Conteo de muestras por etiqueta
 curl -s "$BASE/api/teach/samples" | python3 -m json.tool
 
-# Capturar una muestra para Arduino UNO R3
+# Capturar una muestra para Arduino UNO R4 WiFi
 curl -s -X POST "$BASE/api/teach/capture" \
      -H 'Content-Type: application/json' \
-     -d '{"label":"arduino_uno_r3"}' | python3 -m json.tool
+     -d '{"label":"arduino_uno_r4_wifi"}' | python3 -m json.tool
 
 # Recargar plantillas (no requiere body)
 curl -s -X POST "$BASE/api/teach/reload" | python3 -m json.tool
@@ -1492,7 +1502,7 @@ curl -s -X POST "$BASE/api/teach/reload" | python3 -m json.tool
 # Borrar las muestras de una etiqueta
 curl -s -X POST "$BASE/api/teach/reset" \
      -H 'Content-Type: application/json' \
-     -d '{"label":"arduino_uno_r3"}' | python3 -m json.tool
+     -d '{"label":"arduino_uno_r4_wifi"}' | python3 -m json.tool
 
 # Borrar TODAS las muestras
 curl -s -X POST "$BASE/api/teach/reset" \
@@ -1507,14 +1517,14 @@ curl -s --max-time 3 "$BASE/stream.mjpg" -o /tmp/stream.mjpg
   "timestamp": 1763068800.123,
   "detections": [
     {
-      "label": "arduino_uno_r3",
+      "label": "arduino_uno_r4_wifi",
       "score": 0.912,
       "box": {"x": 0.2141, "y": 0.3056, "w": 0.4125, "h": 0.3187},
       "instance_id": 0,
       "inliers": 87,
-      "name": "Arduino UNO R3",
-      "short_name": "UNO R3",
-      "summary": {"MCU": "ATmega328P", "RAM": "2 KB", "Reloj": "16 MHz"}
+      "name": "Arduino UNO R4 WiFi",
+      "short_name": "UNO R4 WiFi",
+      "summary": {"MCU": "Renesas RA4M1", "RAM": "32 KB", "Reloj": "48 MHz"}
     }
   ]
 }
@@ -1530,10 +1540,10 @@ curl -s --max-time 3 "$BASE/stream.mjpg" -o /tmp/stream.mjpg
   "status": "ok",
   "camera": {"present": true, "resolution": [640, 480], "fps": 14.7, "index": 0},
   "templates": {
-    "count": 12,
-    "labels": ["arduino_nano", "arduino_uno_r3"],
-    "by_label": {"arduino_nano": 4, "arduino_uno_r3": 8, "raspberry_pi_4": 0, "raspberry_pi_5": 0},
-    "loaded": {"arduino_nano": 4, "arduino_uno_r3": 8}
+    "count": 0,
+    "labels": [],
+    "by_label": {"arduino_uno_r4_wifi": 0, "raspberry_pi_4": 0, "arduino_mkr_wifi_1010": 0, "esp32": 0},
+    "loaded": {}
   },
   "detector": {"last_inference_ms": 248.3, "inferences": 1532},
   "uptime_s": 421.7,
@@ -1541,14 +1551,14 @@ curl -s --max-time 3 "$BASE/stream.mjpg" -o /tmp/stream.mjpg
 }
 </code></pre>
 <ul>
-<li><code>templates.by_label</code> incluye las cuatro etiquetas conocidas aunque estén en 0.</li>
+<li><code>templates.by_label</code> incluye las cuatro etiquetas del catálogo aunque estén en 0.</li>
 <li><code>templates.labels</code> solo lista las que tienen muestras.</li>
 <li><code>templates.loaded</code> refleja lo que el detector tiene realmente en memoria.</li>
 <li><code>camera.index</code> es el índice configurado (<code>CAMERA_INDEX</code>).</li>
 </ul>
 <h3 id="post-apiteachcapture"><code>POST /api/teach/capture</code></h3>
 <pre><code class="language-json">// request
-{"label": "arduino_uno_r3"}
+{"label": "arduino_uno_r4_wifi"}
 
 // 200 OK
 {
@@ -1556,8 +1566,8 @@ curl -s --max-time 3 "$BASE/stream.mjpg" -o /tmp/stream.mjpg
   "message": "Muestra guardada (312 keypoints). Total: 8.",
   "keypoints": 312,
   "samples": 8,
-  "file": "arduino_uno_r3/20261113-101502-123-a1b2c3.npz",
-  "loaded": {"arduino_uno_r3": 8}
+  "file": "arduino_uno_r4_wifi/20261119-101502-123-a1b2c3.npz",
+  "loaded": {"arduino_uno_r4_wifi": 8}
 }
 </code></pre>
 <p>Errores típicos:</p>
@@ -1594,14 +1604,14 @@ curl -s --max-time 3 "$BASE/stream.mjpg" -o /tmp/stream.mjpg
 </table>
 <h3 id="post-apiteachreset"><code>POST /api/teach/reset</code></h3>
 <pre><code class="language-json">// request
-{"label": "arduino_uno_r3"}     // o {"label": "__all__"}
+{"label": "arduino_uno_r4_wifi"}     // o {"label": "__all__"}
 
 // 200 OK
-{"ok": true, "message": "Muestras borradas de 'arduino_uno_r3': 8.", "removed": 8,
+{"ok": true, "message": "Muestras borradas de 'arduino_uno_r4_wifi': 8.", "removed": 8,
  "loaded": {}}
 </code></pre>
 <h3 id="post-apiteachreload"><code>POST /api/teach/reload</code></h3>
-<pre><code class="language-json">{"ok": true, "counts": {"arduino_uno_r3": 8}, "samples": {"arduino_uno_r3": 8, ...}}
+<pre><code class="language-json">{"ok": true, "counts": {"arduino_uno_r4_wifi": 8}, "samples": {"arduino_uno_r4_wifi": 8, ...}}
 </code></pre>
 <p>Acepta POST <strong>sin body</strong> y también con <code>{}</code>. Es la extensión del código respecto
 del plan original (junto con <code>/api/teach/samples</code>).</p>
@@ -1732,7 +1742,7 @@ detector.</p>
 </tr>
 <tr>
 <td><code>MIN_INLIERS</code></td>
-<td><code>15</code></td>
+<td><code>20</code></td>
 <td>Mínimo de inliers RANSAC</td>
 </tr>
 <tr>
@@ -1742,7 +1752,7 @@ detector.</p>
 </tr>
 <tr>
 <td><code>SCORE_THRESHOLD</code></td>
-<td><code>0.35</code></td>
+<td><code>0.60</code></td>
 <td>Umbral de publicación</td>
 </tr>
 <tr>
@@ -1767,8 +1777,8 @@ detector.</p>
 </tr>
 <tr>
 <td><code>MAX_INSTANCES_PER_TEMPLATE</code></td>
-<td><code>4</code></td>
-<td>Tope de copias por plantilla</td>
+<td><code>1</code></td>
+<td>Una instancia por plantilla</td>
 </tr>
 <tr>
 <td><code>MIN_POLYGON_FILL_RATIO</code></td>
@@ -1825,7 +1835,7 @@ detector.</p>
 <tr>
 <td>Frame de estado <code>CAMARA NO DISPONIBLE</code></td>
 <td>La app arrancó sin cámara</td>
-<td>Conectar la webcam; esperar 2 s de reintento; revisar <code>journalctl</code></td>
+<td>Revisar la URL de la cámara IP o conectar la webcam; esperar 2 s de reintento; revisar <code>journalctl</code></td>
 </tr>
 <tr>
 <td>Frame de estado <code>CAMARA DESCONECTADA</code></td>
@@ -1844,7 +1854,7 @@ detector.</p>
 </tr>
 <tr>
 <td>La placa está entrenada pero <strong>no se detecta</strong></td>
-<td>Ángulo/luz muy distintos; score &lt; 0.35; caja &lt; 2 % del frame</td>
+<td>Ángulo/luz muy distintos; score &lt; 0.60; caja &lt; 2 % del frame</td>
 <td>Capturar más variaciones; acercar; revisar <code>score</code> e <code>inliers</code> en <code>/api/detections</code></td>
 </tr>
 <tr>
@@ -1974,12 +1984,12 @@ llegue al puerto 8000 lea el video, consulte las fichas, capture muestras o
 <td>Completo (<code>app/</code>, <code>web/</code>, <code>scripts/</code>, <code>systemd/</code>, <code>tests/</code>)</td>
 </tr>
 <tr>
-<td>Auditoría estática</td>
-<td><strong>APROBADA — 0 incidencias abiertas</strong></td>
+<td>Catálogo de fichas</td>
+<td><strong>4 placas</strong>: <code>arduino_uno_r4_wifi</code>, <code>raspberry_pi_4</code>, <code>arduino_mkr_wifi_1010</code>, <code>esp32</code></td>
 </tr>
 <tr>
-<td>Incidencias del ciclo 1</td>
-<td>4/4 resueltas (label NPZ, frame sintético, body de reload, inyección en deploy)</td>
+<td>Auditoría estática</td>
+<td><strong>APROBADA — 0 incidencias</strong></td>
 </tr>
 <tr>
 <td>Tests</td>
@@ -1994,29 +2004,28 @@ llegue al puerto 8000 lea el video, consulte las fichas, capture muestras o
 <td>Implementado y cubierto por tests de API</td>
 </tr>
 <tr>
+<td>Plantillas ORB</td>
+<td><strong>0 archivos .npz</strong>: <code>data/templates/</code> solo contiene <code>.gitkeep</code>. Hay que capturar y entrenar las cuatro placas desde <code>/teach</code>.</td>
+</tr>
+<tr>
 <td>Despliegue en la UNO Q</td>
-<td><strong>Pendiente</strong>: al momento del desarrollo la placa no era accesible por red ni por ADB</td>
+<td><strong>Completado</strong> por USB con <code>deploy.sh --via-adb --adb-serial 142970805</code></td>
 </tr>
 <tr>
-<td>Candidato de red</td>
-<td><code>192.168.1.4</code> (MAC <code>2a:71:1b:c4:cd:e7</code>): responde ping/ARP pero <strong>sin ningún puerto TCP abierto</strong></td>
+<td>Servicio systemd</td>
+<td><code>detector-tarjetas.service</code> <strong>enabled</strong> y <strong>active</strong></td>
 </tr>
 <tr>
-<td>SSH / mDNS</td>
-<td>No detectados en la LAN; <code>avahi</code> no instalado</td>
-</tr>
-<tr>
-<td>Próximo paso</td>
-<td>Conectar por USB-C y usar <code>--via-adb</code> o habilitar SSH desde App Lab</td>
+<td>Pendiente</td>
+<td>Capturar 10–20 muestras por placa y verificar score, inliers y globos con las cuatro fichas</td>
 </tr>
 </tbody>
 </table>
-<p>La red observada durante el desarrollo (documentada solo como referencia, <strong>sin
-modificarla</strong>): notebook <code>192.168.1.10/24</code> por Wi-Fi, gateway <code>192.168.1.254</code>,
-router <code>192.168.1.3</code> con 80/443 (probable Teltonika), candidato UNO Q
-<code>192.168.1.4</code> sin puertos abiertos y <code>192.168.1.5</code> (Samsung). Las subredes
-típicas de Teltonika (<code>192.168.2.1</code>, <code>192.168.0.1</code>, <code>10.0.0.1</code>, <code>192.168.88.1</code>)
-no eran alcanzables.</p>
+<p><strong>Historia del despliegue:</strong> en la primera sesión la UNO Q no era
+alcanzable por red (ping/ARP en <code>192.168.1.4</code>, sin puertos TCP abiertos) y se
+documentaron las vías SSH, ADB y App Lab. El despliegue se completó después por
+USB-C con <code>deploy.sh --via-adb --adb-serial 142970805</code>, que instala el servicio
+systemd y lo deja habilitado y activo. La red no se modificó.</p>
 <hr/>
 <h2 id="estructura-del-repositorio">Estructura del repositorio</h2>
 <pre><code>detector-tarjetas/
@@ -2073,58 +2082,57 @@ no eran alcanzables.</p>
 <tr>
 <td>Madurez</td>
 <td style="text-align: right;">3/5</td>
-<td>41 tests en 5,32 s, auditoría aprobada con 0 incidencias y modo enseñar cubierto por tests. El despliegue en la UNO Q quedó pendiente y la inferencia ARM64 solo está estimada en 200–300 ms.</td>
+<td>41 tests en 5,32 s, auditoría aprobada con 0 incidencias y modo enseñar cubierto por tests. El despliegue por USB (ADB) está verificado y el servicio activo; faltan las plantillas .npz de las cuatro placas y la inferencia ARM64 sigue estimada en 200–300 ms.</td>
 </tr>
 <tr>
 <td>Reproducibilidad</td>
 <td style="text-align: right;">4/5</td>
-<td>run_local.sh crea el venv, instala dependencias y levanta el servidor; FakeCamera permite 41 tests sin cámara. No hay prueba de integración con video ni con la placa.</td>
+<td>run_local.sh crea el venv, instala dependencias y levanta el servidor; FakeCamera permite 41 tests sin cámara. No hay prueba de integración con video real ni un conjunto de muestras versionado.</td>
 </tr>
 <tr>
 <td>Documentación</td>
 <td style="text-align: right;">4/5</td>
-<td>README extenso, bitácora con once problemas, datasheet y developer. La sección de estado actual declara el despliegue pendiente y la red observada sin modificarla.</td>
+<td>README extenso, bitácora con once problemas, datasheet y developer. La sección de estado actual declara el catálogo de cuatro placas, el despliegue por USB y las plantillas pendientes.</td>
 </tr>
 <tr>
 <td>Honestidad de límites</td>
 <td style="text-align: right;">5/5</td>
-<td>Dice explícitamente que no es un clasificador genérico, que no hace OCR, que requiere entrenamiento y que el despliegue físico no se completó.</td>
+<td>Dice explícitamente que no es un clasificador genérico, que no hace OCR, que requiere capturar muestras y que no incluye plantillas entrenadas.</td>
 </tr>
 <tr>
 <td>Valor demostrativo</td>
 <td style="text-align: right;">4/5</td>
-<td>Implementa detección multinstancia con ORB y RANSAC, score con tres señales y UI de enseñanza en caliente, sin modelos externos ni GPU.</td>
+<td>Implementa detección por plantillas con ORB y RANSAC, score con tres señales, una instancia por placa y UI de enseñanza en caliente, sin modelos externos ni GPU.</td>
 </tr>
 <tr>
 <td>Facilidad de despliegue</td>
 <td style="text-align: right;">4/5</td>
-<td>deploy.sh cubre SSH, tar y systemd, con fallback ADB y códigos de salida claros. Requiere acceso a la placa, que en esta versión no estuvo disponible.</td>
+<td>deploy.sh cubre SSH, tar y systemd, con fallback ADB y códigos de salida claros. El despliegue por USB quedó verificado y el servicio activo.</td>
 </tr>
 </tbody>
 </table>
-<p>Sirve para aprender detección por plantillas y para desplegar un reconocedor de cuatro placas en una LAN de confianza. La limitación que más pesa es que solo reconoce lo que se le enseña y que, en su versión inicial, el funcionamiento real en la UNO Q no llegó a verificarse.</p>
+<p>Sirve para aprender detección por plantillas y para desplegar un reconocedor de cuatro placas en una LAN de confianza. La limitación que más pesa es que solo reconoce lo que se le enseña y que las cuatro placas todavía hay que capturarlas y entrenarlas.</p>
 <h2 id="lo-que-no-funciono">Lo que no funcionó</h2>
 <h3 id="v100-despliegue-placa-inalcanzable-por-red">v1.0.0 · despliegue — Placa inalcanzable por red</h3>
-<p>La UNO Q respondía ping y ARP en 192.168.1.4 pero no tenía ningún puerto TCP abierto, así que el despliegue quedó pendiente. Se documentaron tres vías: habilitar SSH desde App Lab, usar ADB por USB-C o copiar el proyecto a mano.</p>
+<p>En la primera sesión la UNO Q respondía ping y ARP en 192.168.1.4 pero no tenía ningún puerto TCP abierto, así que el despliegue no avanzó por red. Se documentaron tres vías (SSH desde App Lab, ADB por USB-C o copia manual) y se resolvió con <code>deploy.sh --via-adb</code>, que dejó el servicio habilitado y activo.</p>
 <h3 id="v100-serializacion-npz-etiquetas-con-comillas">v1.0.0 · serialización NPZ — Etiquetas con comillas</h3>
-<p>str() sobre un array Unicode 0-d devolvía «'arduino_uno_r3'», rompiendo el cruce con boards.json y los globos. Se agregó normalize_label() con .item(), decodificación UTF-8 y limpieza de comillas.</p>
+<p>str() sobre un array Unicode 0-d devolvía «'arduino_uno_r4_wifi'», rompiendo el cruce con boards.json y los globos. Se agregó normalize_label() con .item(), decodificación UTF-8 y limpieza de comillas.</p>
 <h3 id="v100-modo-ensenar-muestras-del-frame-sintetico">v1.0.0 · modo enseñar — Muestras del frame sintético</h3>
 <p>Sin cámara, el modo enseñar aceptaba el cartel «CAMARA NO DISPONIBLE» como muestra y contaminaba las plantillas. Ahora el servidor exige camera.is_open y responde 422 sin escribir archivo.</p>
 <h3 id="v100-multinstancia-dos-placas-iguales-una-detectada">v1.0.0 · multinstancia — Dos placas iguales, una detectada</h3>
-<p>Con dos UNO R3 en cuadro, el ratio test descartaba la segunda porque los descriptores de la primera seguían presentes. Se repite el matching hasta cuatro veces y se eliminan del frame los keypoints dentro de la caja ya aceptada.</p>
+<p>Con dos placas iguales en cuadro, el ratio test descartaba la segunda porque los descriptores de la primera seguían presentes. Se probó repetir el matching hasta cuatro veces; el default actual conserva una instancia por plantilla y suprime las copias con NMS.</p>
 <h2 id="preguntas-tipicas">Preguntas típicas</h2>
 <p><strong>¿Qué es Detector de tarjetas?</strong></p>
-<p>Es una aplicación web que reconoce placas Arduino y Raspberry Pi con ORB y homografía RANSAC, y muestra la ficha técnica en un globo cómic sobre el video. Corre en el lado Linux de la UNO Q o en un notebook con webcam.</p>
+<p>Es una aplicación web que reconoce las cuatro placas del catálogo (Arduino UNO R4 WiFi, Raspberry Pi 4, Arduino MKR WiFi 1010 y ESP32) con ORB y homografía RANSAC, y muestra la ficha técnica en un globo cómic sobre el video. Corre en el lado Linux de la UNO Q o en un notebook con cámara IP o webcam.</p>
 <p><strong>¿Qué no hace?</strong></p>
-<p>No es un clasificador genérico ni hace OCR de marcas o números de serie: solo detecta las etiquetas enseñadas desde /teach. Tampoco funciona sin plantillas y no tiene autenticación ni TLS.</p>
+<p>No es un clasificador genérico ni hace OCR de marcas o números de serie: solo detecta las etiquetas enseñadas desde /teach. No incluye plantillas .npz entrenadas —hay que capturarlas— y no tiene autenticación ni TLS.</p>
 <p><strong>¿Cómo se ejecuta o despliega?</strong></p>
 <p>En local se usa scripts/run_local.sh y se abre el puerto 8000; en la placa se usa scripts/deploy.sh con SSH o la variante --via-adb. El servicio systemd queda habilitado con la unidad incluida.</p>
 <p><strong>¿Qué se puede reutilizar?</strong></p>
 <p>El pipeline ORB con ratio test, homografía y validación geométrica es reutilizable para cualquier objeto texturado. También sirven el modo enseñar con recarga en caliente, las cajas normalizadas y la inyección de una cámara falsa para tests.</p>
 <h2 id="licencia-y-uso">Licencia y uso</h2>
-<p>Proyecto <strong>educativo y demostrativo</strong>. No se incluye un archivo <code>LICENSE</code>
-explícito: si vas a redistribuirlo, agregá la licencia que corresponda a tu
-contexto.</p>
+<p>Proyecto <strong>educativo y demostrativo</strong>, publicado bajo <strong>licencia MIT</strong>
+(ver el archivo <code>LICENSE</code> del repositorio).</p>
 <ul>
 <li><strong>OpenCV</strong> es © sus autores y se distribuye bajo <strong>Apache License 2.0</strong>.</li>
 <li><strong>Arduino</strong> y <strong>Arduino UNO</strong> son marcas de Arduino S.r.l.</li>
@@ -2138,7 +2146,7 @@ contexto.</p>
 <p align="center">
 <strong>Hecho con OpenCV, sin modelos externos y sin salir de la LAN.</strong><br/>
   ORB + RANSAC · 100 % local · 41 tests
-</p></div></div></section><section class="section tight"><div class="wrap"><div class="section-head"><div class="kicker">Tropiezos</div><h2>Los tropiezos, documentados</h2><p class="section-sub">Lo que no funcionó en las primeras versiones, con la corrección aplicada.</p></div><div class="fail-grid"><div class="fail"><div class="v">v1.0.0 · despliegue</div><h3>Placa inalcanzable por red</h3><p>La UNO Q respondía ping y ARP en 192.168.1.4 pero no tenía ningún puerto TCP abierto, así que el despliegue quedó pendiente. Se documentaron tres vías: habilitar SSH desde App Lab, usar ADB por USB-C o copiar el proyecto a mano.</p></div><div class="fail"><div class="v">v1.0.0 · serialización NPZ</div><h3>Etiquetas con comillas</h3><p>str() sobre un array Unicode 0-d devolvía «'arduino_uno_r3'», rompiendo el cruce con boards.json y los globos. Se agregó normalize_label() con .item(), decodificación UTF-8 y limpieza de comillas.</p></div><div class="fail"><div class="v">v1.0.0 · modo enseñar</div><h3>Muestras del frame sintético</h3><p>Sin cámara, el modo enseñar aceptaba el cartel «CAMARA NO DISPONIBLE» como muestra y contaminaba las plantillas. Ahora el servidor exige camera.is_open y responde 422 sin escribir archivo.</p></div><div class="fail"><div class="v">v1.0.0 · multinstancia</div><h3>Dos placas iguales, una detectada</h3><p>Con dos UNO R3 en cuadro, el ratio test descartaba la segunda porque los descriptores de la primera seguían presentes. Se repite el matching hasta cuatro veces y se eliminan del frame los keypoints dentro de la caja ya aceptada.</p></div></div></div></section><section class="section tight"><div class="wrap"><div class="section-head"><div class="kicker">Evaluación</div><h2>Cómo se mide este proyecto</h2><p class="section-sub">Seis criterios fijos, con la evidencia que respalda cada nota.</p></div><div class="rating-head"><div class="rating-avg">4.0<small>/5</small></div><p>Sirve para aprender detección por plantillas y para desplegar un reconocedor de cuatro placas en una LAN de confianza. La limitación que más pesa es que solo reconoce lo que se le enseña y que, en su versión inicial, el funcionamiento real en la UNO Q no llegó a verificarse.</p></div><div class="rating"><div class="rating-row"><div class="rating-name">Madurez</div><div class="rating-bar"><span style="width:60%"></span></div><div class="rating-score">3/5</div><div class="rating-note">41 tests en 5,32 s, auditoría aprobada con 0 incidencias y modo enseñar cubierto por tests. El despliegue en la UNO Q quedó pendiente y la inferencia ARM64 solo está estimada en 200–300 ms.</div></div><div class="rating-row"><div class="rating-name">Reproducibilidad</div><div class="rating-bar"><span style="width:80%"></span></div><div class="rating-score">4/5</div><div class="rating-note">run_local.sh crea el venv, instala dependencias y levanta el servidor; FakeCamera permite 41 tests sin cámara. No hay prueba de integración con video ni con la placa.</div></div><div class="rating-row"><div class="rating-name">Documentación</div><div class="rating-bar"><span style="width:80%"></span></div><div class="rating-score">4/5</div><div class="rating-note">README extenso, bitácora con once problemas, datasheet y developer. La sección de estado actual declara el despliegue pendiente y la red observada sin modificarla.</div></div><div class="rating-row"><div class="rating-name">Honestidad de límites</div><div class="rating-bar"><span style="width:100%"></span></div><div class="rating-score">5/5</div><div class="rating-note">Dice explícitamente que no es un clasificador genérico, que no hace OCR, que requiere entrenamiento y que el despliegue físico no se completó.</div></div><div class="rating-row"><div class="rating-name">Valor demostrativo</div><div class="rating-bar"><span style="width:80%"></span></div><div class="rating-score">4/5</div><div class="rating-note">Implementa detección multinstancia con ORB y RANSAC, score con tres señales y UI de enseñanza en caliente, sin modelos externos ni GPU.</div></div><div class="rating-row"><div class="rating-name">Facilidad de despliegue</div><div class="rating-bar"><span style="width:80%"></span></div><div class="rating-score">4/5</div><div class="rating-note">deploy.sh cubre SSH, tar y systemd, con fallback ADB y códigos de salida claros. Requiere acceso a la placa, que en esta versión no estuvo disponible.</div></div></div></div></section><section class="section tight"><div class="wrap"><div class="section-head"><div class="kicker">Preguntas</div><h2>Lo que suelen preguntar</h2></div><div class="faq"><details><summary>¿Qué es Detector de tarjetas?</summary><p>Es una aplicación web que reconoce placas Arduino y Raspberry Pi con ORB y homografía RANSAC, y muestra la ficha técnica en un globo cómic sobre el video. Corre en el lado Linux de la UNO Q o en un notebook con webcam.</p></details><details><summary>¿Qué no hace?</summary><p>No es un clasificador genérico ni hace OCR de marcas o números de serie: solo detecta las etiquetas enseñadas desde /teach. Tampoco funciona sin plantillas y no tiene autenticación ni TLS.</p></details><details><summary>¿Cómo se ejecuta o despliega?</summary><p>En local se usa scripts/run_local.sh y se abre el puerto 8000; en la placa se usa scripts/deploy.sh con SSH o la variante --via-adb. El servicio systemd queda habilitado con la unidad incluida.</p></details><details><summary>¿Qué se puede reutilizar?</summary><p>El pipeline ORB con ratio test, homografía y validación geométrica es reutilizable para cualquier objeto texturado. También sirven el modo enseñar con recarga en caliente, las cajas normalizadas y la inyección de una cámara falsa para tests.</p></details></div></div></section></div><section class="cta">
+</p></div></div></section><section class="section tight"><div class="wrap"><div class="section-head"><div class="kicker">Tropiezos</div><h2>Los tropiezos, documentados</h2><p class="section-sub">Lo que no funcionó en las primeras versiones, con la corrección aplicada.</p></div><div class="fail-grid"><div class="fail"><div class="v">v1.0.0 · despliegue</div><h3>Placa inalcanzable por red</h3><p>En la primera sesión la UNO Q respondía ping y ARP en 192.168.1.4 pero no tenía puertos TCP abiertos. Se resolvió por USB-C con <code>deploy.sh --via-adb</code>, que instaló el servicio systemd y lo dejó habilitado y activo.</p></div><div class="fail"><div class="v">v1.0.0 · serialización NPZ</div><h3>Etiquetas con comillas</h3><p>str() sobre un array Unicode 0-d devolvía «'arduino_uno_r4_wifi'», rompiendo el cruce con boards.json y los globos. Se agregó normalize_label() con .item(), decodificación UTF-8 y limpieza de comillas.</p></div><div class="fail"><div class="v">v1.0.0 · modo enseñar</div><h3>Muestras del frame sintético</h3><p>Sin cámara, el modo enseñar aceptaba el cartel «CAMARA NO DISPONIBLE» como muestra y contaminaba las plantillas. Ahora el servidor exige camera.is_open y responde 422 sin escribir archivo.</p></div><div class="fail"><div class="v">v1.0.0 · multinstancia</div><h3>Dos placas iguales, una detectada</h3><p>Con dos placas iguales en cuadro, el ratio test descartaba la segunda porque los descriptores de la primera seguían presentes. Se probó repetir el matching hasta cuatro veces; el default actual conserva una instancia por plantilla y suprime las copias con NMS.</p></div></div></div></section><section class="section tight"><div class="wrap"><div class="section-head"><div class="kicker">Evaluación</div><h2>Cómo se mide este proyecto</h2><p class="section-sub">Seis criterios fijos, con la evidencia que respalda cada nota.</p></div><div class="rating-head"><div class="rating-avg">4.0<small>/5</small></div><p>Sirve para aprender detección por plantillas y para desplegar un reconocedor de cuatro placas en una LAN de confianza. La limitación que más pesa es que solo reconoce lo que se le enseña y que las cuatro placas todavía hay que capturarlas y entrenarlas.</p></div><div class="rating"><div class="rating-row"><div class="rating-name">Madurez</div><div class="rating-bar"><span style="width:60%"></span></div><div class="rating-score">3/5</div><div class="rating-note">41 tests en 5,32 s, auditoría aprobada con 0 incidencias y modo enseñar cubierto por tests. El despliegue por USB (ADB) está verificado y el servicio activo; faltan las plantillas .npz de las cuatro placas y la inferencia ARM64 sigue estimada en 200–300 ms.</div></div><div class="rating-row"><div class="rating-name">Reproducibilidad</div><div class="rating-bar"><span style="width:80%"></span></div><div class="rating-score">4/5</div><div class="rating-note">run_local.sh crea el venv, instala dependencias y levanta el servidor; FakeCamera permite 41 tests sin cámara. No hay prueba de integración con video real ni un conjunto de muestras versionado.</div></div><div class="rating-row"><div class="rating-name">Documentación</div><div class="rating-bar"><span style="width:80%"></span></div><div class="rating-score">4/5</div><div class="rating-note">README extenso, bitácora con once problemas, datasheet y developer. La sección de estado actual declara el catálogo de cuatro placas, el despliegue por USB y las plantillas pendientes.</div></div><div class="rating-row"><div class="rating-name">Honestidad de límites</div><div class="rating-bar"><span style="width:100%"></span></div><div class="rating-score">5/5</div><div class="rating-note">Dice explícitamente que no es un clasificador genérico, que no hace OCR, que requiere capturar muestras y que no incluye plantillas entrenadas.</div></div><div class="rating-row"><div class="rating-name">Valor demostrativo</div><div class="rating-bar"><span style="width:80%"></span></div><div class="rating-score">4/5</div><div class="rating-note">Implementa detección por plantillas con ORB y RANSAC, score con tres señales, una instancia por placa y UI de enseñanza en caliente, sin modelos externos ni GPU.</div></div><div class="rating-row"><div class="rating-name">Facilidad de despliegue</div><div class="rating-bar"><span style="width:80%"></span></div><div class="rating-score">4/5</div><div class="rating-note">deploy.sh cubre SSH, tar y systemd, con fallback ADB y códigos de salida claros. El despliegue por USB quedó verificado y el servicio activo.</div></div></div></div></section><section class="section tight"><div class="wrap"><div class="section-head"><div class="kicker">Preguntas</div><h2>Lo que suelen preguntar</h2></div><div class="faq"><details><summary>¿Qué es Detector de tarjetas?</summary><p>Es una aplicación web que reconoce las cuatro placas del catálogo (Arduino UNO R4 WiFi, Raspberry Pi 4, Arduino MKR WiFi 1010 y ESP32) con ORB y homografía RANSAC, y muestra la ficha técnica en un globo cómic sobre el video. Corre en el lado Linux de la UNO Q o en un notebook con cámara IP o webcam.</p></details><details><summary>¿Qué no hace?</summary><p>No es un clasificador genérico ni hace OCR de marcas o números de serie: solo detecta las etiquetas enseñadas desde /teach. No incluye plantillas .npz entrenadas —hay que capturarlas— y no tiene autenticación ni TLS.</p></details><details><summary>¿Cómo se ejecuta o despliega?</summary><p>En local se usa scripts/run_local.sh y se abre el puerto 8000; en la placa se usa scripts/deploy.sh con SSH o la variante --via-adb. El despliegue por USB quedó verificado y el servicio systemd está habilitado y activo.</p></details><details><summary>¿Qué se puede reutilizar?</summary><p>El pipeline ORB con ratio test, homografía y validación geométrica es reutilizable para cualquier objeto texturado. También sirven el modo enseñar con recarga en caliente, las cajas normalizadas y la inyección de una cámara falsa para tests.</p></details></div></div></section></div><section class="cta">
 <div class="wrap">
 <div class="cta-card reveal">
 <div class="kicker" style="justify-content:center">Portfolio · Arduino UNO Q</div>
@@ -2156,8 +2164,8 @@ contexto.</p>
 <div class="wrap">
 <div class="foot-grid">
 <div>
-<div class="foot-brand"><span class="brand-mark"><svg viewbox="0 0 24 24"><rect height="14" rx="3" width="14" x="5" y="5"></rect><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"></path><circle cx="12" cy="12" r="2.5"></circle></svg></span>Pasillo Seguro</div>
-<p class="foot-p">Pasillo Seguro: asistente visual de colisión, documentación y límites reales en un solo lugar.</p>
+<div class="foot-brand"><span class="brand-mark"><svg viewbox="0 0 24 24"><rect height="14" rx="3" width="14" x="5" y="5"></rect><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"></path><circle cx="12" cy="12" r="2.5"></circle></svg></span>Detector de Tarjetas</div>
+<p class="foot-p">Detector de Tarjetas: reconocimiento de placas por ORB y homografía, documentación y límites reales en un solo lugar.</p>
 </div>
 <div>
 <h4>Este proyecto</h4>

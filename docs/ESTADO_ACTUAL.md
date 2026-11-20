@@ -1,9 +1,13 @@
 # Estado actual del detector de tarjetas (as-built)
 
-> Snapshot del 2026-11-19. Describe cómo quedó el sistema DESPUÉS de todos los
-> ajustes de campo, que difieren del diseño original (`PLAN.md` / `README.md`).
-> El catálogo vigente tiene **4 fichas**; el resto de los ids que aparecen aquí
-> son historia de la migración.
+> Snapshot del 2026-11-19, actualizado al catálogo definitivo de **4 placas**.
+> Describe cómo quedó el sistema después de los ajustes de campo. Las menciones a
+> ids retirados que puedan aparecer en `BITACORA.md` son historia de la
+> migración: el catálogo vigente es solo el de 4 fichas.
+>
+> **Supuestos de nomenclatura:** el requerimiento pedía “Arduino UNO R4”,
+> “Arduino MKR WiFi” y “ESP32”; se concretaron como **UNO R4 WiFi**, **MKR WiFi
+> 1010** y **ESP32 DevKit V1** (ESP32-WROOM-32).
 
 ## 1. Qué es y qué hace
 
@@ -61,28 +65,37 @@ En `app/config.py`:
 
 ## 3. Estado de plantillas (`data/templates/`)
 
-| Label | Muestras | Estado |
+| Label | Muestras `.npz` | Estado |
 |---|---|---|
-| `raspberry_pi_2` | **37** | histórico: **label degradado**, fuera del catálogo vigente (se carga y detecta, sin ficha técnica) |
-| `arduino_uno_r4_wifi` | 0 | sin entrenar aún |
-| `raspberry_pi_4` | 0 | sin entrenar aún |
-| `arduino_mkr_wifi_1010` | 0 | sin entrenar aún |
-| `esp32` | 0 | sin entrenar aún |
+| `arduino_uno_r4_wifi` | **0** | sin entrenar: hay que capturarla |
+| `raspberry_pi_4` | **0** | sin entrenar: hay que capturarla |
+| `arduino_mkr_wifi_1010` | **0** | sin entrenar: hay que capturarla |
+| `esp32` | **0** | sin entrenar: hay que capturarla |
 
-- Las **20 plantillas sembradas** desde imágenes de Wikimedia se **borraron** (causaban
-  falsos positivos de fondo).
+- `data/templates/` contiene **solo `.gitkeep`**: no hay ninguna plantilla `.npz`
+  entrenada, ni del catálogo ni de etiquetas históricas.
+- Las **plantillas sembradas desde imágenes de catálogo** se **borraron**
+  (causaban falsos positivos de fondo) y no se versionan.
+- `scripts/seed_images/` conserva fotos de placas retiradas (UNO R3, Nano,
+  NodeMCU, Mega, shield, Raspberry Pi 3) como **material histórico**. No se cargan
+  automáticamente, no generan plantillas y no forman parte del catálogo.
 - `data/boards.json` tiene **4 fichas vigentes**, en este orden:
   `arduino_uno_r4_wifi`, `raspberry_pi_4`, `arduino_mkr_wifi_1010`, `esp32`.
-- Los ids del catálogo anterior quedaron retirados en la migración; el catálogo
-  vigente es el de 4 fichas. `raspberry_pi_2` tampoco está en el catálogo: es el
-  label degradado que conserva las muestras históricas.
+- El test de degradación de `tests/test_api.py` usa la etiqueta **ficticia**
+  `placa_legacy`; no existe ninguna carpeta con ese nombre en el repositorio.
 
 ## 4. Detección en vivo
 
-- Funciona: score **0.90–0.94** con la placa real Raspberry Pi 2 (label
-  `raspberry_pi_2`, degradado).
-- Falso positivo residual depende del **ángulo/fondo** (las 37 muestras incluyen el fondo
-  de la mesa). Mejora: recapturar con fondo limpio o usar `train_from_stream.py`.
+- **Todavía no hay detección del catálogo en vivo**: con `data/templates/` vacío,
+  `templates.count=0` y la UI muestra el banner “Todavía no hay plantillas”. El
+  pipeline está listo; falta capturar las muestras.
+- La degradación de etiquetas sin ficha está cubierta por tests con la etiqueta
+  ficticia `placa_legacy`: la detección se publica con `name = label` y
+  `summary = {}` sin romper la API.
+- Umbrales vigentes para cuando se entrenen las placas: `SCORE_THRESHOLD=0.60`,
+  `MIN_INLIERS=20`, `MAX_INSTANCES_PER_TEMPLATE=1`.
+- El visor dibuja un **marco amarillo de área de escaneo** siempre visible y un
+  **globo estabilizado** solo cuando hay detecciones.
 
 ## 5. Scripts auxiliares (`scripts/`)
 
@@ -96,15 +109,21 @@ En `app/config.py`:
 
 ## 6. Pendientes
 
-1. **Entrenar** las 4 placas del catálogo (`arduino_uno_r4_wifi`, `raspberry_pi_4`,
-   `arduino_mkr_wifi_1010`, `esp32`) en `/teach`.
-2. Recapturar Raspberry Pi 2 con **fondo limpio** para eliminar el falso positivo por fondo
-   (o retirar el label degradado `raspberry_pi_2` cuando ya no haga falta).
-3. Confirmar estabilidad del globo (estático y separado de la tarjeta).
+1. **Capturar y entrenar** las 4 placas del catálogo (`arduino_uno_r4_wifi`,
+   `raspberry_pi_4`, `arduino_mkr_wifi_1010`, `esp32`) desde `/teach`, con la
+   cámara y la luz definitivas. No hay ninguna plantilla `.npz` todavía.
+2. Verificar en vivo `score`, `inliers` y estabilidad del globo para cada placa.
+3. Ajustar `SCORE_THRESHOLD`/`MIN_INLIERS` solo si las muestras reales lo
+   justifican (hoy 0.60 y 20).
 4. Opcional: anclar el globo a posición fija de pantalla si el seguimiento molesta.
+5. Registrar en `docs/BITACORA.md` los resultados de la campaña de captura.
 
 ## 7. Runbook operativo
 
+- **Estado del despliegue**: servicio `detector-tarjetas` **enabled** y **active**
+  con `Restart=always`; última vía de instalación USB/adb, serial `142970805`
+  (ver `README.md` y `DESPLIEGUE_UNOQ.md`). El catálogo en la placa es el mismo de
+  4 fichas; las plantillas siguen en 0 hasta entrenarlas.
 - **Acceso**: `ssh -p 2222 -i ~/.ssh/unoq_key arduino@<ip-de-la-placa>` (sudo vía `sudo -S`);
   si la red no es alcanzable, USB-C + `adb -s 142970805 shell`.
 - **Despliegue**: `scripts/deploy.sh --host <ip> --user arduino` o

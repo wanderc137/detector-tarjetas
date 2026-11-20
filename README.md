@@ -97,44 +97,49 @@ catálogo y de las fichas:
 
 | Etiqueta | MCU / SoC | Reloj | RAM | Almacenamiento | GPIO | Voltaje | Dimensiones | Año |
 |---|---|---|---|---|---|---|---|---|
-| `arduino_uno_r4_wifi` | Renesas RA4M1 (Cortex-M4) + ESP32-S3 | 48 MHz | 32 KB | 256 KB | 20 | 5 V | 68.6 × 53.4 mm | 2023 |
+| `arduino_uno_r4_wifi` | Renesas RA4M1 (Cortex-M4) + ESP32-S3 | 48 MHz | 32 KB | 256 KB | 20 | 5 V | 68.85 × 53.34 mm | 2023 |
 | `raspberry_pi_4` | Broadcom BCM2711 (Cortex-A72, 4 núcleos) | 1.5 GHz | 2 GB | microSD | 40 | 5 V | 85 × 56 mm | 2019 |
-| `arduino_mkr_wifi_1010` | Microchip SAMD21 (Cortex-M0+) + u-blox NINA-W102 | 48 MHz | 32 KB | 256 KB | 22 | 3.3 V | 61.5 × 25 mm | 2018 |
+| `arduino_mkr_wifi_1010` | Microchip SAMD21 (Cortex-M0+) + u-blox NINA-W102 | 48 MHz | 32 KB | 256 KB | 15 | 3.3 V | 61.5 × 25 mm | 2018 |
 | `esp32` | Espressif ESP32-WROOM-32 (Xtensa LX6, 2 núcleos) | 240 MHz | 0.52 MB (532 KB en la UI) | 4 MB | 25 | 3.3 V | 51.5 × 28.5 mm | 2016 |
+
+> **Supuestos de nomenclatura.** El requerimiento original pedía “Arduino UNO R4”,
+> “Arduino MKR WiFi” y “ESP32”. El catálogo concreta esas familias en la variante
+> **UNO R4 WiFi**, la **MKR WiFi 1010** y el **ESP32 DevKit V1** (módulo
+> ESP32-WROOM-32), respectivamente. Son las tres fichas que hoy están en
+> `data/boards.json`.
 
 ### Conectividad
 
 | Placa | Conectividad |
 |---|---|
-| UNO R4 WiFi | Wi-Fi 802.11 b/g/n, Bluetooth 5 LE, USB-C, CAN, I2C, SPI, UART, DAC, matriz LED 12x8, Qwiic |
+| UNO R4 WiFi | USB-C, Wi-Fi 802.11 b/g/n 2.4 GHz, Bluetooth 5 LE, UART, I2C (Qwiic), SPI, CAN, DAC 12 bits |
 | Pi 4 | Wi-Fi 5, Bluetooth 5.0, Gigabit Ethernet, USB 3.0, micro-HDMI, GPIO 40 pines |
-| MKR WiFi 1010 | Wi-Fi 802.11 b/g/n, Bluetooth 5.0, USB micro-B, I2C, SPI, UART, ADC, DAC, ATECC508A, Li-Po |
+| MKR WiFi 1010 | USB micro-B, Wi-Fi 802.11 b/g/n 2.4 GHz, Bluetooth 4.2, UART, I2C, SPI, ADC, DAC, PWM |
 | ESP32 | Wi-Fi 2.4 GHz, Bluetooth 4.2, UART, I2C, SPI, ADC |
 
 ### Descripciones que muestra el panel
 
-- **Arduino UNO R4 WiFi:** placa de 5 V con RA4M1 (Cortex-M4 a 48 MHz) y módulo
-  ESP32-S3 para Wi-Fi y Bluetooth 5 LE. 32 KB de SRAM, 256 KB de flash, 20 GPIO
-  (14 digitales y 6 analógicos), USB-C, CAN, I2C, SPI, UART, DAC, matriz LED 12x8
-  y conector Qwiic.
-- **Raspberry Pi 4 Model B:** SBC de formato credit-card con BCM2711 de cuatro
-  núcleos Cortex-A72 a 1.5 GHz. Se ofrece con 1, 2, 4 u 8 GB de LPDDR4 y arranca
-  desde microSD o USB. Gigabit Ethernet, Wi-Fi 5, Bluetooth 5.0, dos micro-HDMI
-  4K, dos USB 3.0 y dos USB 2.0, GPIO de 40 pines y alimentación USB-C de 5 V/3 A.
-- **Arduino MKR WiFi 1010:** formato MKR compacto con SAMD21 (Cortex-M0+ a 48 MHz)
-  y NINA-W102 para Wi-Fi 802.11 b/g/n y Bluetooth 5.0. 32 KB de SRAM, 256 KB de
-  flash, 22 pines I/O, 3.3 V, soporte Li-Po, ATECC508A, USB micro-B, I2C, SPI,
-  UART, ADC y DAC.
+- **Arduino UNO R4 WiFi:** placa de 5 V con RA4M1 (Cortex-M4, 32 bits, 48 MHz) y
+  módulo ESP32-S3 para Wi-Fi 802.11 b/g/n 2.4 GHz y Bluetooth 5 LE. 32 KB de
+  SRAM, 256 KB de flash, 20 GPIO, USB-C, UART, I2C (Qwiic), SPI, CAN y DAC de
+  12 bits. Formato de 68.85 × 53.34 mm.
+- **Raspberry Pi 4 Model B:** SBC con BCM2711 de cuatro núcleos Cortex-A72 a
+  1.5 GHz y 2 GB de RAM. Arranca desde microSD. Gigabit Ethernet, Wi-Fi 5,
+  Bluetooth 5.0, USB 3.0, micro-HDMI y GPIO de 40 pines; alimentación de 5 V.
+- **Arduino MKR WiFi 1010:** formato MKR compacto con SAMD21 (Cortex-M0+, 32
+  bits, 48 MHz) y u-blox NINA-W102 para Wi-Fi 802.11 b/g/n 2.4 GHz y Bluetooth
+  4.2. 32 KB de SRAM, 256 KB de flash, 15 GPIO, USB micro-B, UART, I2C, SPI,
+  ADC, DAC y PWM; 3.3 V y 61.5 × 25.0 mm.
 - **ESP32 DevKit V1:** placa basada en ESP32-WROOM-32, dos núcleos Xtensa LX6 a
-  240 MHz con Wi-Fi 2.4 GHz y Bluetooth 4.2. 520 KiB de SRAM (532 KB en la UI), 4 MB de flash SPI y
-  ~25 GPIO con UART, I2C, SPI, ADC de 12 bits, DAC, PWM y touch. Alimentación por
-  micro-USB a 3.3 V.
+  240 MHz con Wi-Fi 2.4 GHz y Bluetooth 4.2. 0.52 MB de SRAM (532 KB en la UI),
+  4 MB de flash y 25 GPIO con UART, I2C, SPI y ADC; 3.3 V y 51.5 × 28.5 mm.
 
-> **Etiquetas fuera del catálogo.** Una plantilla vieja como `raspberry_pi_2`
-> puede seguir cargando y detectándose, pero **no tiene ficha**: la API devuelve
-> `name` y `short_name` iguales al `label`, `summary` vacío, y el panel muestra
-> “No hay una ficha técnica para esta etiqueta”. Es una degradación deliberada,
-> no un error. Ver [docs/developer.md](docs/developer.md).
+> **Etiquetas fuera del catálogo.** Cualquier etiqueta que no esté en
+> `boards.json` —por ejemplo la ficticia `placa_legacy` que usan los tests— se
+> sigue cargando y detectando, pero **no tiene ficha**: la API devuelve `name` y
+> `short_name` iguales al `label`, `summary` vacío, y el panel muestra “No hay
+> una ficha técnica para esta etiqueta”. Es una degradación deliberada, no un
+> error. Ver [docs/developer.md](docs/developer.md).
 
 ---
 
@@ -163,9 +168,9 @@ Muestra `name`, `id`, `year`, la tabla de `formatted()` y la descripción:
 | Reloj | 48 MHz | 1.5 GHz | 48 MHz | 240 MHz |
 | RAM | 32 KB | 2 GB | 32 KB | 532 KB |
 | Almacenamiento | 256 KB | microSD | 256 KB | 4 MB |
-| GPIO | 20 | 40 | 22 | 25 |
+| GPIO | 20 | 40 | 15 | 25 |
 | Voltaje | 5 V | 5 V | 3.3 V | 3.3 V |
-| Dimensiones | 68.6 × 53.4 mm | 85 × 56 mm | 61.5 × 25 mm | 51.5 × 28.5 mm |
+| Dimensiones | 68.85 × 53.34 mm | 85 × 56 mm | 61.5 × 25 mm | 51.5 × 28.5 mm |
 | Año | 2023 | 2019 | 2018 | 2016 |
 
 La conectividad se muestra como una lista separada por comas y, si la ficha
@@ -200,8 +205,9 @@ ficha ya resueltos:
 }
 ```
 
-Si el `label` no está en `boards.json` (por ejemplo, `raspberry_pi_2`), el
-servidor responde `name = short_name = "raspberry_pi_2"` y `summary = {}`.
+Si el `label` no está en `boards.json` (por ejemplo, la etiqueta ficticia
+`placa_legacy`), el servidor responde `name = short_name = "placa_legacy"` y
+`summary = {}`.
 
 ---
 
@@ -308,12 +314,11 @@ estático de las plantillas y proyectar un quad sobre las T o fuera del área.
 > con las marcas en T. En ese caso hay que ajustar `SCAN_QUAD` (o el ROI) o
 > rotar/reconfigurar la cámara para volver a portrait 480×640.
 
-> **Plantillas y cambios del área de escaneo (I-05).** Las plantillas
-> históricas se capturaron con el cuadrilátero vigente en su momento. Si cambia
-> `SCAN_QUAD`, `_filter_template_scan_quad` conservará solo los keypoints de
-> cada plantilla que caigan dentro del área nueva: pueden perderse keypoints
-> útiles o conservarse fondo que antes quedaba dentro. Es esperable y no se
-> borran plantillas automáticamente; si la detección se degrada tras un cambio
+> **Plantillas y cambios del área de escaneo (I-05).** Si cambiás `SCAN_QUAD`
+> después de capturar muestras, `_filter_template_scan_quad` conservará solo los
+> keypoints de cada plantilla que caigan dentro del área nueva: pueden perderse
+> keypoints útiles o conservarse fondo que antes quedaba dentro. Es esperable y no
+> se borran plantillas automáticamente; si la detección se degrada tras un cambio
 > de área, recapturá muestras nuevas con la tarjeta dentro del recuadro.
 Después se aplica NMS (IoU > 0.30) y se agrupan centros a menos de 40 px.
 
@@ -970,15 +975,17 @@ find data/templates -name '*.npz' | sort
 | Servicio en la UNO Q | `detector-tarjetas` **enabled** y **active**, `Restart=always` |
 | Despliegue realizado | USB/adb, serial **142970805** |
 | Cámara de campo | Teléfono Android con IP Webcam por Wi-Fi; URL editable desde la web |
-| Plantillas del catálogo | **0 muestras** al cierre de esta edición: hay que entrenar las 4 |
-| Plantilla histórica | `raspberry_pi_2`, 37 muestras, **label degradado fuera del catálogo** |
+| Plantillas del catálogo | **0 muestras**: `data/templates/` solo contiene `.gitkeep`; hay que capturar y entrenar las 4 |
+| Material histórico | `scripts/seed_images/` conserva fotos de placas retiradas (UNO R3, Nano, NodeMCU, Mega, shield, Pi 3); no se cargan solas ni son catálogo |
 | Umbrales vigentes | score 0.60, 20 inliers, 1 instancia por plantilla |
 | Tests | 41/41 en notebook (pytest) |
 
-El detector es honesto sobre su estado: las 4 fichas están completas, pero el
-reconocimiento real depende de capturar muestras con la cámara definitiva. La
-etiqueta `raspberry_pi_2` sigue funcionando como etiqueta sin ficha para no
-romper las plantillas históricas.
+El detector es honesto sobre su estado: las 4 fichas están completas y el código
+está auditado, pero **no hay ninguna plantilla `.npz` entrenada todavía**. El
+reconocimiento real empieza cuando se capturan muestras con la cámara definitiva
+desde `/teach`. La etiqueta ficticia `placa_legacy` —usada por el test de
+degradación— muestra cómo se comporta una etiqueta sin ficha; en el repositorio
+no hay plantillas de ese label.
 
 ---
 
@@ -1056,15 +1063,17 @@ Q real (el detalle histórico está en [docs/BITACORA.md](docs/BITACORA.md)):
   agregó `CAMERA_URL` editable desde la página, persistida porque la IP del
   teléfono cambia por DHCP.
 - **Las plantillas sembradas desde imágenes de catálogo generaban falsos
-  positivos.** Se borraron y se capturaron muestras reales; además se subieron
-  `SCORE_THRESHOLD` a 0.60 y `MIN_INLIERS` a 20.
+  positivos.** Se borraron y se subieron `SCORE_THRESHOLD` a 0.60 y
+  `MIN_INLIERS` a 20. La captura de muestras reales de las 4 placas desde
+  `/teach` sigue pendiente: `data/templates/` está vacío.
 - **El globo tenía jitter.** Se aplicó mediana de 9 frames, EMA 0.15, zona muerta
   de 18 px, histéresis de 20 px y gracia de 1500 ms.
 - **Una instancia por plantilla.** Permitir 4 generaba cajas fantasma; el visor
   muestra una placa a la vez.
-- **`raspberry_pi_2` quedó como etiqueta degradada.** Sus 37 muestras siguen
-  cargando, pero no tienen ficha: es el ejemplo vivo de la degradación
-  controlada.
+- **Las etiquetas sin ficha degradan, no rompen.** El test de API usa la etiqueta
+  ficticia `placa_legacy` para comprobar que una plantilla fuera de `boards.json`
+  se detecta igual y devuelve `name = label`, `summary = {}`. En el repositorio no
+  hay muestras reales: `data/templates/` está vacío y hay que capturar las 4.
 
 ---
 

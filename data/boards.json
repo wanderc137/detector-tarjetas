@@ -3,30 +3,28 @@
     "id": "arduino_uno_r4_wifi",
     "name": "Arduino UNO R4 WiFi",
     "short_name": "UNO R4 WiFi",
-    "mcu_soc": "Renesas RA4M1 (Cortex-M4) + ESP32-S3",
+    "mcu_soc": "Renesas RA4M1 (Cortex-M4, 32 bits) @48 MHz + módulo ESP32-S3 (Wi-Fi/BLE, 8 MB flash)",
     "clock_mhz": 48,
     "ram_mb": 0.03125,
     "flash_storage_gb": 0.000244140625,
     "gpio_count": 20,
     "voltage_v": 5,
     "connectivity": [
-      "Wi-Fi 802.11 b/g/n",
-      "Bluetooth 5 LE",
       "USB-C",
-      "CAN",
-      "I2C",
-      "SPI",
+      "Wi-Fi 802.11 b/g/n 2.4 GHz",
+      "Bluetooth 5 LE",
       "UART",
-      "DAC",
-      "Matriz LED 12x8",
-      "Qwiic"
+      "I2C (Qwiic)",
+      "SPI",
+      "CAN",
+      "DAC 12 bits"
     ],
     "dimensions_mm": [
-      68.6,
-      53.4
+      68.85,
+      53.34
     ],
     "year": 2023,
-    "description": "Placa Arduino de 5 V con microcontrolador Renesas RA4M1 (Cortex-M4 a 48 MHz) y módulo ESP32-S3 para Wi-Fi y Bluetooth 5 LE. Incluye 32 KB de SRAM, 256 KB de flash, 20 GPIO (14 digitales y 6 analógicos), USB-C, CAN, I2C, SPI, UART, DAC y una matriz LED 12x8 integrada. Trae conector Qwiic para expansión rápida y es compatible con shields UNO R3.",
+    "description": "Placa Arduino de 5 V con microcontrolador Renesas RA4M1 (Cortex-M4 de 32 bits a 48 MHz) y módulo ESP32-S3 para Wi-Fi 802.11 b/g/n 2.4 GHz y Bluetooth 5 LE. Incluye 32 KB de SRAM, 256 KB de flash, 20 GPIO (14 digitales/PWM + 6 analógicas), USB-C, UART, I2C con conector Qwiic, SPI, CAN, DAC de 12 bits y es compatible con shields UNO R3.",
     "image_path": null,
     "urls": [
       "https://docs.arduino.cc/hardware/uno-r4-wifi/"
@@ -65,30 +63,29 @@
     "id": "arduino_mkr_wifi_1010",
     "name": "Arduino MKR WiFi 1010",
     "short_name": "MKR WiFi 1010",
-    "mcu_soc": "Microchip SAMD21 (Cortex-M0+) + u-blox NINA-W102",
+    "mcu_soc": "Microchip SAMD21 (Cortex-M0+, 32 bits) @48 MHz + u-blox NINA-W102",
     "clock_mhz": 48,
     "ram_mb": 0.03125,
     "flash_storage_gb": 0.000244140625,
-    "gpio_count": 22,
+    "gpio_count": 15,
     "voltage_v": 3.3,
     "connectivity": [
-      "Wi-Fi 802.11 b/g/n",
-      "Bluetooth 5.0",
       "USB micro-B",
+      "Wi-Fi 802.11 b/g/n 2.4 GHz",
+      "Bluetooth 4.2",
+      "UART",
       "I2C",
       "SPI",
-      "UART",
       "ADC",
       "DAC",
-      "ATECC508A",
-      "Li-Po"
+      "PWM"
     ],
     "dimensions_mm": [
       61.5,
-      25
+      25.0
     ],
     "year": 2018,
-    "description": "Placa compacta del formato MKR con microcontrolador Microchip SAMD21 (Cortex-M0+ a 48 MHz) y módulo u-blox NINA-W102 para Wi-Fi 802.11 b/g/n y Bluetooth 5.0. Ofrece 32 KB de SRAM, 256 KB de flash, 22 pines I/O, alimentación a 3.3 V y soporte para batería Li-Po. Incluye chip criptográfico ATECC508A, USB micro-B, I2C, SPI, UART, ADC y DAC.",
+    "description": "Placa compacta del formato MKR con microcontrolador Microchip SAMD21 (Cortex-M0+ de 32 bits a 48 MHz) y módulo u-blox NINA-W102 para Wi-Fi 802.11 b/g/n 2.4 GHz y Bluetooth 4.2. Ofrece 32 KB de SRAM, 256 KB de flash, 15 GPIO (8 digitales y 7 analógicas), alimentación a 3.3 V, USB micro-B, UART, I2C, SPI, ADC, DAC de 10 bits y PWM.",
     "image_path": null,
     "urls": [
       "https://docs.arduino.cc/hardware/mkr-wifi-1010/"

@@ -3,7 +3,12 @@
 **Proyecto:** Detector de placas electrónicas por visión artificial para Arduino UNO Q
 **Versión documentada:** 1.0.0
 **Fecha de cierre de esta bitácora:** noviembre de 2026
-**Estado:** código implementado, auditado y aprobado; despliegue físico en la UNO Q pendiente
+**Estado:** código implementado, auditado y aprobado. Esta bitácora es un
+**registro histórico cerrado en v1.0.0**: al momento de escribirla el despliegue
+físico seguía pendiente. Después se completó por USB/adb y el catálogo vigente
+quedó en 4 placas; para el estado actual, ver `docs/ESTADO_ACTUAL.md` y el
+README. Las placas que aparecen en episodios antiguos (UNO R3, Nano, etc.) son
+material histórico, no el catálogo vigente.
 
 ---
 
@@ -16,7 +21,7 @@
 | Tests | 41 pruebas automatizadas con imágenes sintéticas y cámara falsa |
 | Auditoría | Aprobada, 0 incidencias abiertas; 4 incidencias del ciclo 1 resueltas |
 | Documentación | README, datasheet, developer y esta bitácora |
-| Despliegue en UNO Q | **No completado**: la placa no fue accesible por red ni por ADB en el momento del desarrollo |
+| Despliegue en UNO Q | **No completado al cierre de esta bitácora**: la placa no fue accesible por red ni por ADB en ese momento. Luego se resolvió por USB/adb (ver `docs/ESTADO_ACTUAL.md`) |
 
 ---
 
@@ -180,6 +185,11 @@ matches de la segunda porque los descriptores de la primera seguían presentes.
 Después de aceptar una instancia, **elimina del frame todos los keypoints dentro
 de su caja** (con 8 px de margen), no solo los inliers. Así el ratio test vuelve a
 ser discriminante. El clustering final agrupa centros a menos de 40 px.
+
+> **Nota de estado actual:** aquel valor de 4 instancias por plantilla era el de
+> la época. Hoy `MAX_INSTANCES_PER_TEMPLATE=1`: el visor conserva una instancia
+> por plantilla y suprime las copias con NMS. El código de instancias múltiples
+> sigue disponible si se sube el parámetro.
 
 **Lección.** Para objetos repetidos, el matching uno-a-uno no alcanza: hay que
 “consumir” la evidencia de la instancia ya encontrada.

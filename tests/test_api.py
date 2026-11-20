@@ -388,13 +388,13 @@ def test_detection_label_matches_board_spec(tmp_path: Path) -> None:
 
 
 def test_detection_with_label_outside_catalog_degrades(tmp_path: Path) -> None:
-    """Un label sin ficha (p. ej. ``raspberry_pi_2``) no rompe la API ni la UI.
+    """Un label sin ficha (p. ej. ``placa_legacy``) no rompe la API ni la UI.
 
     Las plantillas viejas siguen en la placa aunque su ficha ya no esté en el
     catálogo: ``/api/detections`` debe devolver el label crudo, sin ``summary``
     y sin lanzar excepciones (la UI muestra "No hay una ficha técnica…").
     """
-    write_template(tmp_path / "templates", "raspberry_pi_2", make_texture())
+    write_template(tmp_path / "templates", "placa_legacy", make_texture())
 
     with ServerHarness(tmp_path, frame=_build_frame(), present=True) as harness:
         harness.camera.frame_queue.put(_build_frame())
@@ -402,9 +402,9 @@ def test_detection_with_label_outside_catalog_degrades(tmp_path: Path) -> None:
         assert response.status_code == 200
         detection = _wait_for_detection(harness)
         assert detection is not None, "El detector no publicó la plantilla vieja"
-        assert detection["label"] == "raspberry_pi_2"
-        assert detection["name"] == "raspberry_pi_2"
-        assert detection["short_name"] == "raspberry_pi_2"
+        assert detection["label"] == "placa_legacy"
+        assert detection["name"] == "placa_legacy"
+        assert detection["short_name"] == "placa_legacy"
         assert detection["summary"] == {}
 
         boards = requests.get(f"{harness.base_url}/api/boards", timeout=5)
